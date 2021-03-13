@@ -1,44 +1,16 @@
 --DATOS PARA INSESRTAR
---Restaurante    /////////Actualizar la ref con la tabla
-INSERT INTO RESTAURANTE_OBJ 
-VALUES (1,'Pizzeria Antonio','Calle Falsa 123','Madrid', 00037, 666444777, 'Pizzeria', TIMESTAMP '13:00:00', TIMESTAMP '23:30:00', 7, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 1 AND pro.id_producto = 2));
-
-INSERT INTO RESTAURANTE_OBJ 
-VALUES (2,'Dominos Pizza','Avenida España','Albacete', 15637, 644775693, 'Pizzeria', TIMESTAMP '12:00:00', TIMESTAMP '23:30:00', 8, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 3 AND pro.id_producto = 4));
-
-INSERT INTO RESTAURANTE_OBJ 
-VALUES (3,'Big Bang Burger','Calle Nueva','Cuenca', 13695, 699885214, 'Comida rápida', TIMESTAMP '10:00:00', TIMESTAMP '00:00:00', 7, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 5 AND pro.id_producto = 6));
-
-INSERT INTO RESTAURANTE_OBJ 
-VALUES (4,'KFC','Calle Imaginalia','Albacete', 15695, 655325214, 'Comida rápida', TIMESTAMP '12:15:00', TIMESTAMP '23:00:00', 6, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 7 AND pro.id_producto = 8));
-
-INSERT INTO RESTAURANTE_OBJ 
-VALUES (5,'Taco Bell','Calle Princesa','Albacete', 15644, 688521499, 'Comida rápida', TIMESTAMP '12:00:00', TIMESTAMP '00:00:00', 5, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 9 AND pro.id_producto = 10));
-
-INSERT INTO RESTAURANTE_OBJ 
-VALUES (6,'WOK','Calle Antonio Machado ','Madrid', 00044, 652149988, 'Comida asiatica', TIMESTAMP '11:00:00', TIMESTAMP '23:45:00', 9, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 11 AND pro.id_producto = 12));
-
-INSERT INTO RESTAURANTE_OBJ 
-VALUES (7,'Restaurante Honk Kong','Avenida de los Reyes Catolicos','Cuenca', 13674, 688149952, 'Comida asiatica', TIMESTAMP '12:30:00', TIMESTAMP '23:00:00', 7, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 13 AND pro.id_producto = 14));
-
-INSERT INTO RESTAURANTE_OBJ 
-VALUES (8,'Restaurante el barrio','Calle Fermin Caballero','Cuenca', 13616, 677164237, 'Restaurante', TIMESTAMP '10:00:00', TIMESTAMP '00:00:00', 8, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 15 AND pro.id_producto = 16));
-
-INSERT INTO RESTAURANTE_OBJ 
-VALUES (9,'Restaurante Politecnica','Paseo de los Estudiantes ','Albacete', 15617, 646275978, 'Restaurante', TIMESTAMP '08:15:00', TIMESTAMP '16:00:00', 9, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 17 AND pro.id_producto = 18));
-
 --Producto
 INSERT INTO PRODUCTO_OBJ VALUES
-(1, 'Pizza BBQ', 'Pizza con queso, jamon y salsa barbacoa', 12, 15, 310, 2100);
+(1, 'Pizza BBQ', 'Pizza con queso, jamon y salsa barbacoa', 12.00, 15, 310, 2100);
 
 INSERT INTO PRODUCTO_OBJ VALUES
-(2, 'Pizza Carbonara', 'Pizza con queso, jamon, tomate, peperoni y aceitunas', 11, 30, 340, 2200);
+(2, 'Pizza Carbonara', 'Pizza con queso, jamon, tomate, peperoni y aceitunas', 11.00, 30, 340, 2200);
 
 INSERT INTO PRODUCTO_OBJ VALUES
-(3, 'Pizza Jamon y queso', 'Pizza con queso, jamon y tomate', 8, 30, 250, 1900);
+(3, 'Pizza Jamon y queso', 'Pizza con queso, jamon y tomate', 8.00, 30, 250, 1900);
 
 INSERT INTO PRODUCTO_OBJ VALUES
-(4, 'Pizza Cuatro quesos', 'Pizza con varios quesos y tomate', 8, 50, 200, 2100);
+(4, 'Pizza Cuatro quesos', 'Pizza con varios quesos y tomate', 8.00, 50, 200, 2100);
 
 INSERT INTO PRODUCTO_OBJ VALUES
 (5, 'H queso', 'Hamburgesa con queso, lechuga y tomate', 2.50, 90, 300, 1900);
@@ -83,6 +55,58 @@ INSERT INTO PRODUCTO_OBJ VALUES
 (18, 'Pechugas con salsa', 'Pechugas con salsa roquefort', 4.57, 45, 260, 2097);
 
 
+-- LINEA FACTURA //Duda con el uso de UNDER
+INSERT INTO LFACTURA_OBJ VALUE
+(000001, 'Cambio ruedas', 450.52, 94.50, 2);
+
+INSERT INTO LFACTURA_OBJ VALUE
+(000246, 'Rep. motor', 1200.49, 252.00, 1);
+
+INSERT INTO LFACTURA_OBJ VALUE
+(000015, 'Rep. dirección', 1056.99, 221.76, 2);
+
+
+-- MECANICO  
+INSERT INTO MECANICO_OBJ VALUE
+('45678321L', 'Fernando', 'Perez Fernandez', TO_DATE('31/01/2025', 'dd/mm/yyyy'), 'GenRush');
+
+INSERT INTO MECANICO_OBJ VALUE
+('56217971E', 'Manolo', 'Gomez Romero', TO_DATE('30/06/2026', 'dd/mm/yyyy'), 'Motores manolo');
+
+INSERT INTO MECANICO_OBJ VALUE
+('56217971E', 'Diego', 'Rodrigez Lopez', TO_DATE('30/06/2026', 'dd/mm/yyyy'), 'Reparaciones rodrigez');
+
+
+--Restaurante    /////////Actualizar la ref con la tabla
+INSERT INTO RESTAURANTE_OBJ 
+VALUES (1,'Pizzeria Antonio','Calle Falsa 123','Madrid', 00037, 666444777, 'Pizzeria', TIMESTAMP '13:00:00', TIMESTAMP '23:30:00', 7, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 1 AND pro.id_producto = 2));
+
+INSERT INTO RESTAURANTE_OBJ 
+VALUES (2,'Dominos Pizza','Avenida España','Albacete', 15637, 644775693, 'Pizzeria', TIMESTAMP '12:00:00', TIMESTAMP '23:30:00', 8, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 3 AND pro.id_producto = 4));
+
+INSERT INTO RESTAURANTE_OBJ 
+VALUES (3,'Big Bang Burger','Calle Nueva','Cuenca', 13695, 699885214, 'Comida rápida', TIMESTAMP '10:00:00', TIMESTAMP '00:00:00', 7, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 5 AND pro.id_producto = 6));
+
+INSERT INTO RESTAURANTE_OBJ 
+VALUES (4,'KFC','Calle Imaginalia','Albacete', 15695, 655325214, 'Comida rápida', TIMESTAMP '12:15:00', TIMESTAMP '23:00:00', 6, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 7 AND pro.id_producto = 8));
+
+INSERT INTO RESTAURANTE_OBJ 
+VALUES (5,'Taco Bell','Calle Princesa','Albacete', 15644, 688521499, 'Comida rápida', TIMESTAMP '12:00:00', TIMESTAMP '00:00:00', 5, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 9 AND pro.id_producto = 10));
+
+INSERT INTO RESTAURANTE_OBJ 
+VALUES (6,'WOK','Calle Antonio Machado ','Madrid', 00044, 652149988, 'Comida asiatica', TIMESTAMP '11:00:00', TIMESTAMP '23:45:00', 9, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 11 AND pro.id_producto = 12));
+
+INSERT INTO RESTAURANTE_OBJ 
+VALUES (7,'Restaurante Honk Kong','Avenida de los Reyes Catolicos','Cuenca', 13674, 688149952, 'Comida asiatica', TIMESTAMP '12:30:00', TIMESTAMP '23:00:00', 7, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 13 AND pro.id_producto = 14));
+
+INSERT INTO RESTAURANTE_OBJ 
+VALUES (8,'Restaurante el barrio','Calle Fermin Caballero','Cuenca', 13616, 677164237, 'Restaurante', TIMESTAMP '10:00:00', TIMESTAMP '00:00:00', 8, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 15 AND pro.id_producto = 16));
+
+INSERT INTO RESTAURANTE_OBJ 
+VALUES (9,'Restaurante Politecnica','Paseo de los Estudiantes ','Albacete', 15617, 646275978, 'Restaurante', TIMESTAMP '08:15:00', TIMESTAMP '16:00:00', 9, (SELECT REF(pro) FROM PRODUCTO_OBJ pro WHERE pro.id_producto = 17 AND pro.id_producto = 18));
+
+
+
 --Usuario
 INSERT INTO USUARIO_OBJ VALUES 
 (1, 'Antonio', 'Perez Gomez', 612345679, 'antoniopg@gmail.com', 'Albacete', 'España');
@@ -107,6 +131,7 @@ INSERT INTO USUARIO_OBJ VALUES
 
 INSERT INTO USUARIO_OBJ VALUES 
 (8, 'Rebeca', 'Navarro Gomez', 654778968, 'rebecang@gmail.com', 'Madrid', 'España');
+
 
 --Cliente  //Duda con el uso de UNDER
 -- Antonio
@@ -163,21 +188,41 @@ INSERT INTO OFERTA_OBJ  VALUES
 (456781, 5, 25, TIMESTAMP '21-07-2021',        ,      );
 
 
---PEDIDO /////A la espera de las tablas  ///Falta asociarlo al cliente
+--PEDIDO /////A la espera de las tablas  ///Falta lpedido, repartidor, pedido
 INSERT INTO PEDIDO_OBJ VALUES --Pizza jamon y queso x1
-(100000000, 8, 2.2, TO_DATE('21/07/2021 21:00:00', 'dd/mm/yyyy hh24:mi:ss'), 0, 2, 'En preparacion');
+(100000000, 8, 2.2, TO_DATE('21/07/2021 21:00:00', 'dd/mm/yyyy hh24:mi:ss'), 0, 2, 'En preparacion',       ,      ,    );
 
 INSERT INTO PEDIDO_OBJ VALUES  --Tacos x3
-(200000000, 8.97, 1.4, TO_DATE('21/07/2021 20:30:00', 'dd/mm/yyyy hh24:mi:ss'), 1, 1, 'En camino');
+(200000000, 8.97, 1.4, TO_DATE('21/07/2021 20:30:00', 'dd/mm/yyyy hh24:mi:ss'), 1, 1, 'En camino',       ,      ,    );
 
 INSERT INTO PEDIDO_OBJ VALUES --Cordero asado x1 y filete con patatas x1
-(300000000, 16.07, 1.9, TO_DATE('21/07/2021 22:00:00', 'dd/mm/yyyy hh24:mi:ss'), 1, 3, 'En camino');
+(300000000, 16.07, 1.9, TO_DATE('21/07/2021 22:00:00', 'dd/mm/yyyy hh24:mi:ss'), 1, 3, 'En camino',        ,      ,    );
 
 INSERT INTO PEDIDO_OBJ VALUES --Rollitos de primavera x3 y pollo al limon x2
-(400000000, 26.35, 0.9, TO_DATE('21/07/2021 20:00:00', 'dd/mm/yyyy hh24:mi:ss'), 0, 1, 'Entregado');
+(400000000, 26.35, 0.9, TO_DATE('21/07/2021 20:00:00', 'dd/mm/yyyy hh24:mi:ss'), 0, 1, 'Entregado',        ,      ,    );
 
 
---LINEA PEDIDO ///A la espera de las tablas
+--LINEA PEDIDO ///A la espera de las tablas    /////Falta producto y lfactura
+INSERT INTO LPEDIDO_OBJ VALUE
+(100000000, 1,      ,        );
+
+INSERT INTO LPEDIDO_OBJ VALUE
+(200000000, 3,      ,        );
+
+INSERT INTO LPEDIDO_OBJ VALUE
+(300000000, 1,      ,        );
+
+INSERT INTO LPEDIDO_OBJ VALUE
+(300000001, 1,      ,        );
+
+INSERT INTO LPEDIDO_OBJ VALUE
+(400000000, 3,      ,        );
+
+INSERT INTO LPEDIDO_OBJ VALUE
+(400000000, 2,      ,        );
+
+
+
 
 
 
@@ -249,39 +294,17 @@ INSERT INTO VEHELECTRICO_OBJ VALUE
 
 
 
-
--- MECANICO  
-INSERT INTO MECANICO_OBJ VALUE
-('45678321L', 'Fernando', 'Perez Fernandez', TO_DATE('31/01/2025', 'dd/mm/yyyy'), 'GenRush');
-
-INSERT INTO MECANICO_OBJ VALUE
-('56217971E', 'Manolo', 'Gomez Romero', TO_DATE('30/06/2026', 'dd/mm/yyyy'), 'Motores manolo');
-
-INSERT INTO MECANICO_OBJ VALUE
-('56217971E', 'Diego', 'Rodrigez Lopez', TO_DATE('30/06/2026', 'dd/mm/yyyy'), 'Reparaciones rodrigez');
-
-
-
---FACTURA //A la espera de las tablas
+--FACTURA //A la espera de las tablas   //falta lfactura
 INSERT INTO FACTURA_OBJ VALUE
 (000001, 'Cambio ruedas', 450.52,   );
 
 INSERT INTO FACTURA_OBJ VALUE
-(000246, 'Rep. motor', 1200.49,        );
+(000002, 'Rep. motor', 1200.49,        );
 
 INSERT INTO FACTURA_OBJ VALUE
-(000015, 'Rep. dirección', 1056.99,    );
+(000003, 'Rep. dirección', 1056.99,    );
 
 
--- LINEA FACTURA //Duda con el uso de UNDER
-INSERT INTO LFACTURA_OBJ VALUE
-(000001, 'Cambio ruedas', 450.52, 94.50, 2);
-
-INSERT INTO LFACTURA_OBJ VALUE
-(000246, 'Rep. motor', 1200.49, 252.00, 1);
-
-INSERT INTO LFACTURA_OBJ VALUE
-(000015, 'Rep. dirección', 1056.99, 221.76, 2);
 
 
 
