@@ -55,7 +55,7 @@ INSERT INTO PRODUCTO_OBJ VALUES
 (18, 'Pechugas con salsa', 'Pechugas con salsa roquefort', 4.57, 45, 260, 2097);
 
 
--- LINEA FACTURA //Duda con el uso de UNDER
+-- LINEA FACTURA 
 INSERT INTO LFACTURA_OBJ VALUE
 (000001, 'Cambio ruedas', 450.52, 94.50, 2);
 
@@ -108,65 +108,65 @@ VALUES (9,'Restaurante Politecnica','Paseo de los Estudiantes ','Albacete', 1561
 
 
 --Usuario
-INSERT INTO USUARIO_OBJ VALUES 
-(1, 'Antonio', 'Perez Gomez', 612345679, 'antoniopg@gmail.com', 'Albacete', 'España');
+--INSERT INTO USUARIO_OBJ VALUES 
+--(1, 'Antonio', 'Perez Gomez', 612345679, 'antoniopg@gmail.com', 'Albacete', 'España');
 
-INSERT INTO USUARIO_OBJ VALUES 
-(2, 'Mario', 'Gomez Martinez', 698754324, 'mariogm@gmail.com', 'Cuenca', 'España');
+--INSERT INTO USUARIO_OBJ VALUES 
+--(2, 'Mario', 'Gomez Martinez', 698754324, 'mariogm@gmail.com', 'Cuenca', 'España');
 
-INSERT INTO USUARIO_OBJ VALUES 
-(3, 'Lucia', 'Fajardo Gonzalez', 645782391, 'luciafg@gmail.com', 'Albacete', 'España');
+--INSERT INTO USUARIO_OBJ VALUES 
+--(3, 'Lucia', 'Fajardo Gonzalez', 645782391, 'luciafg@gmail.com', 'Albacete', 'España');
 
-INSERT INTO USUARIO_OBJ VALUES 
-(4, 'Juan', 'Gonzalez Romero', 673215984, 'juangr@gmail.com', 'Albacete', 'España');
+--INSERT INTO USUARIO_OBJ VALUES 
+--(4, 'Juan', 'Gonzalez Romero', 673215984, 'juangr@gmail.com', 'Albacete', 'España');
 
-INSERT INTO USUARIO_OBJ VALUES 
-(5, 'Alicia', 'Romero Tortola', 677248798, 'aliciart@gmail.com', 'Cuenca', 'España');
+--INSERT INTO USUARIO_OBJ VALUES 
+--(5, 'Alicia', 'Romero Tortola', 677248798, 'aliciart@gmail.com', 'Cuenca', 'España');
 
-INSERT INTO USUARIO_OBJ VALUES 
-(6, 'Marta', 'Sevilla Martinez', 628497533, 'martasm@gmail.com', 'Cuenca', 'España');
+--INSERT INTO USUARIO_OBJ VALUES 
+--(6, 'Marta', 'Sevilla Martinez', 628497533, 'martasm@gmail.com', 'Cuenca', 'España');
 
-INSERT INTO USUARIO_OBJ VALUES 
-(7, 'Pedro', 'Plaza Fernandez', 629477821, 'pedropf@gmail.com', 'Madrid', 'España');
+--INSERT INTO USUARIO_OBJ VALUES 
+--(7, 'Pedro', 'Plaza Fernandez', 629477821, 'pedropf@gmail.com', 'Madrid', 'España');
 
-INSERT INTO USUARIO_OBJ VALUES 
-(8, 'Rebeca', 'Navarro Gomez', 654778968, 'rebecang@gmail.com', 'Madrid', 'España');
+--INSERT INTO USUARIO_OBJ VALUES 
+--(8, 'Rebeca', 'Navarro Gomez', 654778968, 'rebecang@gmail.com', 'Madrid', 'España');
 
 
---Cliente  //Duda con el uso de UNDER
+--Cliente  
 -- Antonio
-INSERT INTO CLIENTE_OBJ VALUE
-('Calle 111', 15623 );
+INSERT INTO CLIENTE_OBJ VALUES
+(1, 'Antonio', 'Perez Gomez', 612345679, 'antoniopg@gmail.com', 'Albacete', 'España', 'Calle 111', 15623 );
 
 -- Lucia
-INSERT INTO CLIENTE_OBJ VALUE
-('Calle 222', 15645);
+INSERT INTO CLIENTE_OBJ VALUES
+(3, 'Lucia', 'Fajardo Gonzalez', 645782391, 'luciafg@gmail.com', 'Albacete', 'España', 'Calle 222', 15645);
 
 -- Mario 
-INSERT INTO CLIENTE_OBJ VALUE 
-('Calle 333', 13655);
+INSERT INTO CLIENTE_OBJ VALUES
+(2, 'Mario', 'Gomez Martinez', 698754324, 'mariogm@gmail.com', 'Cuenca', 'España', 'Calle 333', 13655);
 
 -- Alicia
-INSERT INTO CLIENTE_OBJ VALUE
-('Calle 444', 13684);
+INSERT INTO CLIENTE_OBJ VALUES
+(5, 'Alicia', 'Romero Tortola', 677248798, 'aliciart@gmail.com', 'Cuenca', 'España', 'Calle 444', 13684);
 
 -- Rebeca
-INSERT INTO CLIENTE_OBJ VALUE
-('Calle 555', 00045);
+INSERT INTO CLIENTE_OBJ VALUES
+(8, 'Rebeca', 'Navarro Gomez', 654778968, 'rebecang@gmail.com', 'Madrid', 'España', 'Calle 555', 00045);
 
 
 -- Repartidor //Duda con el uso de UNDER  ///A la espera de las tablas
 -- Juan
-INSERT INTO REPARTIDOR_OBJ VALUE
-('44444447F',444444444444, TO_DATE('21/01/2021', 'dd/mm/yyyy'), TO_DATE('21/01/2022', 'dd/mm/yyyy'),      );
+INSERT INTO REPARTIDOR_OBJ VALUES
+(4, 'Juan', 'Gonzalez Romero', 673215984, 'juangr@gmail.com', 'Albacete', 'España', '44444447F',444444444444, TO_DATE('21/01/2021', 'dd/mm/yyyy'), TO_DATE('21/01/2022', 'dd/mm/yyyy'),      );
 
 -- Marta
-INSERT INTO REPARTIDOR_OBJ VALUE
-('22222224T',222222222222, TO_DATE('16/03/2021', 'dd/mm/yyyy'), TO_DATE('16/03/2022', 'dd/mm/yyyy'),     );
+INSERT INTO REPARTIDOR_OBJ VALUES
+(6, 'Marta', 'Sevilla Martinez', 628497533, 'martasm@gmail.com', 'Cuenca', 'España', '22222224T',222222222222, TO_DATE('16/03/2021', 'dd/mm/yyyy'), TO_DATE('16/03/2022', 'dd/mm/yyyy'),     );
 
 -- Pedro
-INSERT INTO REPARTIDOR_OBJ VALUE
-('33333339N',333333333333, TO_DATE('09/01/2021', 'dd/mm/yyyy'), TO_DATE('09/06/2022', 'dd/mm/yyyy'),     );
+INSERT INTO REPARTIDOR_OBJ VALUES
+(7, 'Pedro', 'Plaza Fernandez', 629477821, 'pedropf@gmail.com', 'Madrid', 'España', '33333339N',333333333333, TO_DATE('09/01/2021', 'dd/mm/yyyy'), TO_DATE('09/06/2022', 'dd/mm/yyyy'),     );
 
 
 
@@ -203,105 +203,102 @@ INSERT INTO PEDIDO_OBJ VALUES --Rollitos de primavera x3 y pollo al limon x2
 
 
 --LINEA PEDIDO ///A la espera de las tablas    /////Falta producto y lfactura
-INSERT INTO LPEDIDO_OBJ VALUE
+INSERT INTO LPEDIDO_OBJ VALUES
 (100000000, 1,      ,        );
 
-INSERT INTO LPEDIDO_OBJ VALUE
+INSERT INTO LPEDIDO_OBJ VALUES
 (200000000, 3,      ,        );
 
-INSERT INTO LPEDIDO_OBJ VALUE
+INSERT INTO LPEDIDO_OBJ VALUES
 (300000000, 1,      ,        );
 
-INSERT INTO LPEDIDO_OBJ VALUE
+INSERT INTO LPEDIDO_OBJ VALUES
 (300000001, 1,      ,        );
 
-INSERT INTO LPEDIDO_OBJ VALUE
+INSERT INTO LPEDIDO_OBJ VALUES
 (400000000, 3,      ,        );
 
-INSERT INTO LPEDIDO_OBJ VALUE
+INSERT INTO LPEDIDO_OBJ VALUES
 (400000000, 2,      ,        );
 
 
 
 
-
-
-
 --METODO PAGO 
-INSERT INTO METODOPAGO_OBJ VALUES
-(1111122222, TO_DATE('21/07/2021 20:00:00', 'dd/mm/yyyy hh24:mi:ss'));
+--INSERT INTO METODOPAGO_OBJ VALUES
+--(1111122222, TO_DATE('21/07/2021 20:00:00', 'dd/mm/yyyy hh24:mi:ss'));
 
-INSERT INTO METODOPAGO_OBJ VALUES
-(3333344444, TO_DATE('21/07/2021 21:00:00', 'dd/mm/yyyy hh24:mi:ss'));
+--INSERT INTO METODOPAGO_OBJ VALUES
+--(3333344444, TO_DATE('21/07/2021 21:00:00', 'dd/mm/yyyy hh24:mi:ss'));
 
-INSERT INTO METODOPAGO_OBJ VALUES
-(5555566666, TO_DATE('21/07/2021 22:00:00', 'dd/mm/yyyy hh24:mi:ss'));
+--INSERT INTO METODOPAGO_OBJ VALUES
+--(5555566666, TO_DATE('21/07/2021 22:00:00', 'dd/mm/yyyy hh24:mi:ss'));
 
-INSERT INTO METODOPAGO_OBJ VALUES
-(7777788888, TO_DATE('21/07/2021 20:30:00', 'dd/mm/yyyy hh24:mi:ss'));
+--INSERT INTO METODOPAGO_OBJ VALUES
+--(7777788888, TO_DATE('21/07/2021 20:30:00', 'dd/mm/yyyy hh24:mi:ss'));
 
 
 
--- TARJETACREDITO  /////¿Estaría bien aun usando UNDER? Duda con el uso de UNDER
+-- TARJETACREDITO  
 --pedido 2
-INSERT INTO TARJETACREDITO VALUE
-(1111-2222-3333-4444, TO_DATE('07/2025', 'mm/yyyy'), 111, 'Antonio');
+INSERT INTO TARJETACREDITO VALUES
+(7777788888, TO_DATE('21/07/2021 20:30:00', 'dd/mm/yyyy hh24:mi:ss'), 1111-2222-3333-4444, TO_DATE('07/2025', 'mm/yyyy'), 111, 'Antonio');
 
 --pedido 3
-INSERT INTO TARJETACREDITO VALUE
-(2222-3333-4444-1111, TO_DATE('11/2023', 'mm/yyyy'), 222, 'Alicia');
+INSERT INTO TARJETACREDITO VALUES
+(5555566666, TO_DATE('21/07/2021 22:00:00', 'dd/mm/yyyy hh24:mi:ss'), 2222-3333-4444-1111, TO_DATE('11/2023', 'mm/yyyy'), 222, 'Alicia');
 
 
 
---CONTRARREMBOLSO /////¿Estaría bien aun usando UNDER? Duda con el uso de UNDER
+--CONTRARREMBOLSO 
 --pedido 1
-INSERT INTO CONTRARREMBOLSO VALUE
-('Pago con un billete de 20', 12.00);
+INSERT INTO CONTRARREMBOLSO VALUES
+(3333344444, TO_DATE('21/07/2021 21:00:00', 'dd/mm/yyyy hh24:mi:ss'), 'Pago con un billete de 20', 12.00);
 
 --pedido 4
-INSERT INTO CONTRARREMBOLSO VALUE
-('Pago con un billete de 50', 23.65);
+INSERT INTO CONTRARREMBOLSO VALUES
+(1111122222, TO_DATE('21/07/2021 20:00:00', 'dd/mm/yyyy hh24:mi:ss'), 'Pago con un billete de 50', 23.65);
 
 
 --VEHICULO  /// A la espera de las tablas  ///Referencia mecanico
-INSERT INTO VEHICULO_OBJ VALUE
-('1111abc', '245RP4', 'Suzuki', 1 , 210.96,       );
+--INSERT INTO VEHICULO_OBJ VALUES
+--('1111abc', '245RP4', 'Suzuki', 1 , 210.96,       );
 
-INSERT INTO VEHICULO_OBJ VALUE
-('2222def', '946LT7', 'Renault', 1 , 200.12,       );
+--INSERT INTO VEHICULO_OBJ VALUES
+--('2222def', '946LT7', 'Renault', 1 , 200.12,       );
 
-INSERT INTO VEHICULO_OBJ VALUE
-('3333ghi', '327TFT7', 'Toyota', 1 , 225.47,       );
+--INSERT INTO VEHICULO_OBJ VALUES
+--('3333ghi', '327TFT7', 'Toyota', 1 , 225.47,       );
 
-INSERT INTO VEHICULO_OBJ VALUE
-('4444jkl', '429BC45', 'BMW', 1 , 213.23,       );
-
-
---GASOLINA // Duda con el uso de UNDER
-INSERT INTO VEHGASOLINA_OBJ VALUE
-('B', 250.12);
-
-INSERT INTO VEHGASOLINA_OBJ VALUE
-('C', 305.45);
+--INSERT INTO VEHICULO_OBJ VALUE
+--('4444jkl', '429BC45', 'BMW', 1 , 213.23,       );
 
 
--- ELECTRICO //Duda con el uso de UNDER
-INSERT INTO VEHELECTRICO_OBJ VALUE
-(300, 100.02);
+--GASOLINA ///Referencia mecanico
+INSERT INTO VEHGASOLINA_OBJ VALUES
+('1111abc', '245RP4', 'Suzuki', 1 , 210.96,      ,'B', 250.12);
 
-INSERT INTO VEHELECTRICO_OBJ VALUE
-(200, 075.43);
+INSERT INTO VEHGASOLINA_OBJ VALUES
+('2222def', '946LT7', 'Renault', 1 , 200.12,      ,'C', 305.45);
+
+
+-- ELECTRICO ///Referencia mecanico
+INSERT INTO VEHELECTRICO_OBJ VALUES
+('3333ghi', '327TFT7', 'Toyota', 1 , 225.47,      ,300, 100.02);
+
+INSERT INTO VEHELECTRICO_OBJ VALUES
+('4444jkl', '429BC45', 'BMW', 1 , 213.23,       ,200, 075.43);
 
 
 
 --FACTURA //A la espera de las tablas   //falta lfactura
-INSERT INTO FACTURA_OBJ VALUE
+INSERT INTO FACTURA_OBJ VALUES
 (000001, 'Cambio ruedas', 450.52,   );
 
-INSERT INTO FACTURA_OBJ VALUE
+INSERT INTO FACTURA_OBJ VALUES
 (000002, 'Rep. motor', 1200.49,        );
 
-INSERT INTO FACTURA_OBJ VALUE
+INSERT INTO FACTURA_OBJ VALUES
 (000003, 'Rep. dirección', 1056.99,    );
 
 
