@@ -1,0 +1,543 @@
+DROP TYPE CLIENTE_OBJ FORCE;/
+DROP TYPE CONTRAREEMBOLSO_OBJ FORCE;/
+DROP TYPE FACTURA_OBJ FORCE;/
+DROP TYPE LPEDIDO_OBJ FORCE;/
+DROP TYPE MECANICO_OBJ FORCE;/
+DROP TYPE METODOPAGO_OBJ FORCE;/
+DROP TYPE PEDIDO_OBJ FORCE;/
+DROP TYPE PRODUCTO_OBJ FORCE;/
+DROP TYPE REPARTIDOR_OBJ FORCE;/
+DROP TYPE RESTAURANTE_OBJ FORCE;/
+DROP TYPE TARJETA_OBJ FORCE;/
+DROP TYPE USUARIO_OBJ FORCE;/
+DROP TYPE VEHELECTRICO_OBJ FORCE;/
+DROP TYPE VEHGASOLINA_OBJ FORCE;/
+DROP TYPE VEHICULO_OBJ FORCE;/
+DROP TYPE LFACTURA_OBJ FORCE;/
+DROP TYPE LPEDIDO_NTABTYP FORCE;/
+DROP TYPE OFERTA_OBJ FORCE;/
+DROP TYPE OFERTA_NTABTYP FORCE;/
+
+CREATE OR REPLACE TYPE RESTAURANTE_OBJ AS OBJECT(
+id_restaurante NUMBER(10,0),
+nombre VARCHAR2(20),
+direccion VARCHAR2(200),
+ciudad VARCHAR(30),
+codigo_postal NUMBER(5),
+telefono NUMBER(9),
+tipo_restaurante VARCHAR(30),
+hora_apertura TIMESTAMP (1),
+hora_cierre TIMESTAMP(1),
+calificacion NUMBER(1),
+ORDER MEMBER FUNCTION CompareRestaurantes(r RESTAURANTE_OBJ) RETURN INTEGER
+);
+/
+
+
+CREATE OR REPLACE TYPE BODY RESTAURANTE_OBJ AS
+	ORDER MEMBER FUNCTION CompareRestaurantes(r RESTAURANTE_OBJ) RETURN INTEGER IS
+	BEGIN
+		IF id_restaurante = r.id_restaurante THEN
+			IF nombre< r.nombre THEN RETURN 1;
+			ELSIF nombre > r.nombre THEN RETURN -1;
+			ELSE RETURN 0;
+			END IF;
+		ELSE
+			IF id_restaurante < r.id_restaurante THEN RETURN 1;
+			ELSIF id_restaurante > r.id_restaurante THEN RETURN -1;
+			ELSE RETURN 0;
+			END IF;
+		END IF;
+	END;
+END;
+/
+
+CREATE OR REPLACE TYPE OFERTA_OBJ AS OBJECT(
+codigo_oferta NUMBER(6),
+descuento NUMBER(2),
+maximo_descuento NUMBER(2),
+finalizacion DATE
+);
+/
+
+CREATE TYPE OFERTA_NTABTYP AS TABLE OF OFERTA_OBJ;
+/
+
+CREATE OR REPLACE TYPE PRODUCTO_OBJ AS OBJECT(
+id_producto NUMBER(10),
+nombre VARCHAR(20),
+descripcion VARCHAR2(200),
+precio_unit NUMBER(6,2),
+stock NUMBER(6),
+tipo_producto VARCHAR2(40),
+peso_gramos NUMBER(3),
+calorias NUMBER(3),
+restaurante REF RESTAURANTE_OBJ,
+oferta OFERTA_NTABTYP
+);
+/
+
+
+CREATE OR REPLACE TYPE MECANICO_OBJ AS OBJECT(
+    dni VARCHAR2(9),
+    nombre VARCHAR2(20),
+    apellidos VARCHAR2(30),
+    periodo DATE, 
+    empresa VARCHAR2(30)
+);
+/
+CREATE OR REPLACE TYPE LPEDIDO_OBJ AS OBJECT(
+id_lpedido NUMBER(6),
+cantidad NUMBER(3),
+precio NUMBER(3),
+iva NUMBER(2),
+descripcion VARCHAR(200),
+producto REF PRODUCTO_OBJ
+);
+/
+CREATE TYPE LPEDIDO_NTABTYP AS TABLE OF LPEDIDO_OBJ;
+/
+
+
+CREATE OR REPLACE TYPE USUARIO_OBJ AS OBJECT(
+id_usuario NUMBER(6),
+nombre VARCHAR2(30),
+apellidos VARCHAR2(50),
+telefono NUMBER(9),
+correoE VARCHAR2(60),
+ciudad VARCHAR2(20),
+pais VARCHAR2(20)
+)NOT FINAL;
+/
+
+
+
+
+CREATE OR REPLACE TYPE METODOPAGO_OBJ AS OBJECT(
+    idpago NUMBER(10),
+    fecha DATE
+)NOT FINAL;
+/
+
+
+CREATE OR REPLACE TYPE TARJETA_OBJ UNDER METODOPAGO_OBJ (
+    numero NUMBER(16),
+    fecha_caducidad NUMBER(4),
+    cvv NUMBER(3),
+    propiertario VARCHAR2(50)
+);
+/
+
+CREATE OR REPLACE TYPE CONTRAREEMBOLSO_OBJ UNDER METODOPAGO_OBJ (
+    observaciones VARCHAR2(300),
+    daPropina NUMBER(1)
+);
+/
+CREATE OR REPLACE TYPE CLIENTE_OBJ UNDER USUARIO_OBJ(
+direccion VARCHAR2(60),
+codigo_postal NUMBER(5), 
+metodoPago REF METODOPAGO_OBJ
+);
+/
+
+CREATE OR REPLACE TYPE VEHICULO_OBJ AS OBJECT(
+    matricula VARCHAR2(7),
+    modelo VARCHAR2(20),
+    marca VARCHAR2(30),
+    disponibilidad NUMBER(2,0),
+    peso NUMBER(7,2),
+    mecanico REF MECANICO_OBJ,
+	ORDER MEMBER FUNCTION CompareMatricula(v VEHICULO_OBJ) RETURN INTEGER
+		
+)NOT FINAL;
+/
+
+CREATE OR REPLACE TYPE BODY VEHICULO_OBJ AS
+	ORDER MEMBER FUNCTION CompareMatricula(v VEHICULO_OBJ) RETURN INTEGER IS
+	BEGIN
+		IF matricula < v.matricula THEN
+			RETURN -1;
+		ELSIF matricula > v.matricula THEN
+			RETURN 1;
+		ELSE
+			RETURN 0;
+		END IF;
+	END;
+END;
+/
+		
+		
+CREATE OR REPLACE TYPE VEHGASOLINA_OBJ UNDER VEHICULO_OBJ (
+    tipolicencia VARCHAR(2),
+    emisiones NUMBER(5,2)
+);
+/
+
+CREATE OR REPLACE TYPE VEHELECTRICO_OBJ UNDER VEHICULO_OBJ (
+    autonomia NUMBER(3,0),
+    emisiones NUMBER(5,2)
+);
+/
+CREATE OR REPLACE TYPE REPARTIDOR_OBJ UNDER USUARIO_OBJ (
+    dni VARCHAR2(9),
+    numeross NUMBER(12,0),
+    fechaalta DATE, 
+    fechabaja DATE,
+    vehiculo REF VEHICULO_OBJ
+);
+/
+
+
+
+
+CREATE OR REPLACE TYPE PEDIDO_OBJ AS OBJECT(
+id_pedido NUMBER(9),
+precio NUMBER(3),
+distancia NUMBER(6,2),
+fecha DATE,
+pagado NUMBER(1),
+urgencia NUMBER(1),
+estado VARCHAR2(20),
+lpedido LPEDIDO_NTABTYP,
+repartidor REF REPARTIDOR_OBJ,
+pedido REF CLIENTE_OBJ
+);
+/
+
+CREATE OR REPLACE TYPE FACTURA_OBJ AS OBJECT(
+    id_factura NUMBER(10,0),
+    descripcion VARCHAR2(20),
+    importe NUMBER(8,2),
+    mecanico REF MECANICO_OBJ,
+    vehiculo REF VEHICULO_OBJ
+);
+/
+
+
+DROP TABLE RESTAURANTE_TAB FORCE;/
+DROP TABLE MECANICO_TAB FORCE;/
+DROP TABLE METODOPAGO_TAB FORCE;/
+DROP TABLE PRODUCTO_TAB FORCE;/
+DROP TABLE OFERTA_TAB FORCE;/
+DROP TABLE CLIENTE_TAB FORCE;/
+DROP TABLE VEHICULO_TAB FORCE;/
+DROP TABLE REPARTIDOR_TAB FORCE;/
+DROP TABLE PEDIDO_TAB FORCE;/
+DROP TABLE LINEASPEDIDO_TAB FORCE;/
+DROP TABLE FACTURA_TAB FORCE;/
+DROP TABLE LRECIBO_TAB FORCE;/
+
+CREATE TABLE RESTAURANTE_TAB OF RESTAURANTE_OBJ (
+    id_restaurante PRIMARY KEY,
+    nombre NOT NULL,
+    direccion NOT NULL,
+    ciudad NOT NULL,
+    telefono NOT NULL
+);/
+
+CREATE TABLE MECANICO_TAB OF MECANICO_OBJ (
+    dni PRIMARY KEY,
+    nombre NOT NULL,
+    empresa NOT NULL
+);/
+
+CREATE TABLE METODOPAGO_TAB OF METODOPAGO_OBJ(
+    idpago PRIMARY KEY,
+    fecha NOT NULL
+);/
+
+CREATE TABLE PRODUCTO_TAB OF PRODUCTO_OBJ (
+    id_producto PRIMARY KEY,
+    nombre NOT NULL,
+    CHECK(precio_unit >0),
+    CHECK(stock >0),
+    restaurante SCOPE IS RESTAURANTE_TAB)
+    NESTED TABLE oferta STORE AS OFERTA_TAB;
+    
+ALTER TABLE OFERTA_TAB ADD (PRIMARY KEY (codigo_oferta ),     CHECK (descuento>0),
+    CHECK (maximo_descuento>0));
+
+CREATE TABLE CLIENTE_TAB OF CLIENTE_OBJ (
+    id_usuario  PRIMARY KEY,
+    nombre NOT NULL,
+    telefono NOT NULL,
+    correoE NOT NULL,
+    ciudad NOT NULL,
+    direccion NOT NULL,
+    codigo_postal NOT NULL,
+    SCOPE FOR (metodoPago) IS METODOPAGO_TAB
+    
+);/
+
+
+
+CREATE TABLE VEHICULO_TAB OF VEHICULO_OBJ(
+    matricula PRIMARY KEY,
+    SCOPE FOR (mecanico) IS MECANICO_TAB
+);/
+
+
+CREATE TABLE REPARTIDOR_TAB OF REPARTIDOR_OBJ(
+    id_usuario  PRIMARY KEY,
+    nombre NOT NULL,
+    telefono NOT NULL,
+    correoE NOT NULL,
+    ciudad NOT NULL,
+    dni  UNIQUE,
+    numeross UNIQUE,
+    fechaalta NOT NULL,
+    SCOPE FOR (vehiculo) IS VEHICULO_TAB
+);/
+
+
+
+CREATE TABLE PEDIDO_TAB OF PEDIDO_OBJ(
+    id_pedido PRIMARY KEY,
+    precio NOT NULL,
+    fecha NOT NULL,
+    urgencia NOT NULL,
+    CHECK (urgencia > 0),
+    CHECK (urgencia <=4),
+    SCOPE FOR (repartidor) IS REPARTIDOR_TAB)
+    NESTED TABLE lpedido STORE AS LINEASPEDIDO_TAB;/
+    
+ALTER TABLE LINEASPEDIDO_TAB ADD (SCOPE FOR (producto) IS  PRODUCTO_TAB, PRIMARY KEY (id_lpedido), CHECK(cantidad > 0));/
+
+
+
+CREATE TABLE FACTURA_TAB OF FACTURA_OBJ(
+    id_factura PRIMARY KEY,
+    importe NOT NULL,
+    CHECK(importe >= 0),
+    SCOPE FOR (mecanico) IS MECANICO_TAB,
+    SCOPE FOR (vehiculo) IS VEHICULO_TAB
+    );/
+    
+
+
+
+
+
+
+
+INSERT INTO RESTAURANTE_TAB VALUES (RESTAURANTE_OBJ
+(1,'Pizzeria Antonio','Calle Falsa 123','Madrid', 00037, 666444777, 'Pizzeria', TO_DATE ('20:00:00', 'HH24:MI:SS'), TO_DATE ('23:30:00', 'HH24:MI:SS'), 7)); /
+
+INSERT INTO RESTAURANTE_TAB VALUES (RESTAURANTE_OBJ
+(2,'Dominos Pizza','Avenida España','Albacete', 15637, 644775693, 'Pizzeria', TO_DATE ('20:00:00', 'HH24:MI:SS'), TO_DATE ('23:30:00', 'HH24:MI:SS'), 4));/
+
+
+INSERT INTO RESTAURANTE_TAB VALUES (RESTAURANTE_OBJ
+(3,'Big Bang Burger','Calle Nueva','Cuenca', 13695, 699885214, 'Comida rápida', TO_DATE ('20:00:00', 'HH24:MI:SS'), TO_DATE ('23:30:00', 'HH24:MI:SS'), 8));
+/
+
+INSERT INTO RESTAURANTE_TAB VALUES (RESTAURANTE_OBJ
+(4,'KFC','Calle Imaginalia','Albacete', 15695, 655325214, 'Comida rápida', TO_DATE ('12:00:00', 'HH24:MI:SS'), TO_DATE ('17:30:00', 'HH24:MI:SS'), 9));
+/
+
+INSERT INTO RESTAURANTE_TAB VALUES (RESTAURANTE_OBJ
+(5,'Taco Bell','Calle Princesa','Albacete', 15644, 688521499, 'Comida rápida', TO_DATE ('14:00:00', 'HH24:MI:SS'), TO_DATE ('17:30:00', 'HH24:MI:SS'), 9));
+/
+
+INSERT INTO RESTAURANTE_TAB VALUES (RESTAURANTE_OBJ
+(6,'WOK','Calle Antonio Machado ','Madrid', 00044, 652149988, 'Comida asiatica', TO_DATE ('20:00:00', 'HH24:MI:SS'), TO_DATE ('23:30:00', 'HH24:MI:SS'), 7));
+/
+
+INSERT INTO RESTAURANTE_TAB VALUES (RESTAURANTE_OBJ
+(7,'Honk Kong','Avenida de los Reyes Catolicos','Cuenca', 13674, 688149952, 'Comida asiatica', TO_DATE ('20:00:00', 'HH24:MI:SS'), TO_DATE ('23:30:00', 'HH24:MI:SS'), 5));
+/
+
+INSERT INTO RESTAURANTE_TAB VALUES (RESTAURANTE_OBJ
+(8,'Restaurante barrio','Calle Fermin Caballero','Cuenca', 13616, 677164237, 'Restaurante', TO_DATE ('13:00:00', 'HH24:MI:SS'), TO_DATE ('16:30:00', 'HH24:MI:SS'), 3));
+/
+
+INSERT INTO RESTAURANTE_TAB VALUES (RESTAURANTE_OBJ
+(9,'Restaurante Poli','Paseo de los Estudiantes ','Albacete', 15617, 646275978, 'Restaurante',TO_DATE ('20:00:00', 'HH24:MI:SS'), TO_DATE ('23:30:00', 'HH24:MI:SS'), 9));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(1, 'Pizza BBQ', 'Pizza con queso, jamon y salsa barbacoa', 12.00, 40, 'Pizza', 310, 210, (SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '1' ), OFERTA_NTABTYP()));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(2, 'Pizza Carbonara', 'Pizza con queso, jamon, tomate, peperoni y aceitunas', 11.00, 30, 'Pizza', 340, 220, (SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '1' ), OFERTA_NTABTYP()));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(3, 'Pizza Jamon y queso', 'Pizza con queso, jamon y tomate',8.00, 30, 'Pizza', 250, 190, (SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '2' ), OFERTA_NTABTYP()));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(4, 'Pizza Cuatro quesos', 'Pizza con varios quesos y tomate', 8.00, 50, 'Pizza', 200, 210, (SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '2' ), OFERTA_NTABTYP()));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(5, 'H queso', 'Hamburgesa con queso, lechuga y tomate', 2.50, 90, 'Carne',300, 190, (SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '3' ), OFERTA_NTABTYP()));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(6, 'H Big Bang', '3 hamburgesas con queso, lechuga, tomate y huevo', 3.99, 40, 'Carne', 500, 230, (SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '3' ), OFERTA_NTABTYP()));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(7, 'Alitas de pollo', 'Racion de 12 alitas de pollo', 2.99, 60, 'Carne', 400, 240, (SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '4' ), OFERTA_NTABTYP()));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(8, 'Muslos de pollo', 'Racion de 12 muslos de pollo', 3.99, 45, 'Carne', 450, 240, (SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '4' ), OFERTA_NTABTYP()));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(9, 'Taco', 'Taco con carne picada, verduras y salsa a elegir', 2.99, 70, 'Carne y verduras', 250, 220, (SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '5' ), OFERTA_NTABTYP()));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(10, 'Taco picante', 'Taco con carne picada, verduras y guacamole', 4.99, 63, 'Carne y verduras', 350, 240, (SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '5' ), OFERTA_NTABTYP()));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(11, 'Pollo al limón', 'Pollo con salsa al limón', 5.90, 125, 'Carne', 350, 215, (SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '6' ), OFERTA_NTABTYP()));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(12, 'Rollitos primavera', 'Ración de 2 piezas de hojaldre relleno de verduras. Incluye salsa agridulce o soja', 4.90, 250, 'Verdura',225, 205, (SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '6' ), OFERTA_NTABTYP()));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(13, 'Sushi', 'Racion de 6 trozos de pescado fresco sin cocinar con arroz', 4.57, 97, 'Pescado', 142, 182, (SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '7' ), OFERTA_NTABTYP()));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(14, 'Curry', 'Salsa especiada con arroz', 3.57, 230, 'Arroz', 160, 189, (SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '7' ), OFERTA_NTABTYP()));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(15, 'Filete con patatas', 'Filete de ternera con una racion de patatas', 7.50, 35, 'Carne', 300, 215,(SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '8' ), OFERTA_NTABTYP()));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(16, 'Cordero asado', 'Cordero asado con una racion de patatas', 8.57, 27, 'Carne', 260, 209,(SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '8' ), OFERTA_NTABTYP()));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(17, 'Paella', 'Arroz con trozos de pollo, pimiento, gisantes y gambas', 4.20, 40, 'Arroz', 220, 200, (SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '9' ), OFERTA_NTABTYP()));
+/
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(18, 'Pechugas con salsa', 'Pechugas con salsa de setas', 4.57, 45, 'Carne', 260, 209,(SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '9' ), OFERTA_NTABTYP()));
+/
+INSERT INTO TABLE (SELECT oferta FROM PRODUCTO_TAB  WHERE id_producto  =1 ) VALUES(OFERTA_OBJ
+(000001, 15, 30, TO_DATE ('2021/11/12', 'yyyy/mm/dd,' )));
+/
+INSERT INTO TABLE (SELECT oferta FROM PRODUCTO_TAB  WHERE id_producto  =3 ) VALUES(OFERTA_OBJ
+(000031, 10, 24, TO_DATE ('2021/11/12', 'yyyy/mm/dd,' )));
+/
+INSERT INTO TABLE (SELECT oferta FROM PRODUCTO_TAB  WHERE id_producto  =7 ) VALUES(OFERTA_OBJ
+(000200, 10, 10, TO_DATE ('2021-08-27', 'yyyy/mm/dd,' )));
+/
+INSERT INTO TABLE (SELECT oferta FROM PRODUCTO_TAB  WHERE id_producto  =8 ) VALUES(OFERTA_OBJ
+(000456, 20, 40, TO_DATE ('2021/06/03', 'yyyy/mm/dd,' )));
+/
+INSERT INTO TABLE (SELECT oferta FROM PRODUCTO_TAB  WHERE id_producto  =14 ) VALUES(OFERTA_OBJ
+(456781, 5, 25,  TO_DATE ('2021/11/1', 'yyyy/mm/dd,' )));
+/
+
+INSERT INTO MECANICO_TAB VALUES (MECANICO_OBJ
+('45678321L', 'Fernando', 'Perez Fernandez', TO_DATE('31/01/2025', 'dd/mm/yyyy'), 'GenRush'));
+/
+INSERT INTO MECANICO_TAB VALUES (MECANICO_OBJ
+('56217971E', 'Manolo', 'Gomez Romero', TO_DATE('30/06/2026', 'dd/mm/yyyy'), 'Motores manolo'));
+/
+INSERT INTO MECANICO_TAB VALUES (MECANICO_OBJ
+('41247895J', 'Diego', 'Rodrigez Lopez', TO_DATE('30/06/2026', 'dd/mm/yyyy'), 'Reparaciones rodrigez'));
+/
+
+INSERT INTO METODOPAGO_TAB VALUES (CONTRAREEMBOLSO_OBJ
+(1, TO_DATE('21/07/2021 21:00:00', 'dd/mm/yyyy hh24:mi:ss'), '', 0 ));
+/
+INSERT INTO METODOPAGO_TAB VALUES (CONTRAREEMBOLSO_OBJ
+(2, TO_DATE('21/07/2021 20:00:00', 'dd/mm/yyyy hh24:mi:ss'), 'Habitacion 273', 1));
+/
+
+INSERT INTO METODOPAGO_TAB VALUES (TARJETA_OBJ
+(3, TO_DATE('21/07/2021 20:30:00', 'dd/mm/yyyy hh24:mi:ss'),  1111-2222-3333-4444, 0725, 111, 'Antonio'));
+/
+INSERT INTO METODOPAGO_TAB VALUES (TARJETA_OBJ
+(4, TO_DATE('12/03/2021 20:30:00', 'dd/mm/yyyy hh24:mi:ss'), 5362-1333-3333-4444, 0227, 934, 'Don Pepe'));
+/
+INSERT INTO METODOPAGO_TAB VALUES (TARJETA_OBJ
+(5, TO_DATE('14/03/2021 15:00:00', 'dd/mm/yyyy hh24:mi:ss'), 5325-4526-6353-4345, 0227, 934, 'Don Valentiniano'));
+/
+
+INSERT INTO CLIENTE_TAB VALUES (CLIENTE_OBJ
+(1, 'Antonio', 'Perez Gomez', 612345679, 'antoniopg@gmail.com', 'Albacete', 'España', 'Calle 111', 00202, (SELECT REF(m) FROM METODOPAGO_TAB m WHERE m.idpago = 1 )));
+/
+INSERT INTO CLIENTE_TAB VALUES (CLIENTE_OBJ
+(2, 'Lucia', 'Fajardo Gonzalez', 645782391, 'luciafg@gmail.com', 'Albacete', 'España', 'Calle 222', 00202, (SELECT REF(m) FROM METODOPAGO_TAB m WHERE m.idpago = 2 )));
+/
+
+INSERT INTO CLIENTE_TAB VALUES (CLIENTE_OBJ
+(3, 'Mario', 'Gomez Martinez', 698754324, 'mariogm@gmail.com', 'Cuenca', 'España', 'Calle 333', 13655, (SELECT REF(m) FROM METODOPAGO_TAB m WHERE m.idpago = 3 )));
+/
+INSERT INTO CLIENTE_TAB VALUES (CLIENTE_OBJ
+(4, 'Alicia', 'Romero Tortola', 677248798, 'aliciart@gmail.com', 'Cuenca', 'España', 'Calle 444', 13684, (SELECT REF(m) FROM METODOPAGO_TAB m WHERE m.idpago = 4 )));
+/
+INSERT INTO CLIENTE_TAB VALUES (CLIENTE_OBJ
+(5, 'Rebeca', 'Navarro Gomez', 654778968, 'rebecang@gmail.com', 'Madrid', 'España', 'Calle 555', 00045, (SELECT REF(m) FROM METODOPAGO_TAB m WHERE m.idpago = 5 )));
+/
+
+
+
+INSERT INTO VEHICULO_TAB VALUES ( VEHGASOLINA_OBJ
+('1111abc', '245RP4', 'Suzuki', 1 , 210.96, (SELECT REF(m) FROM MECANICO_TAB m WHERE m.dni = '45678321L' ),'B', 250.12));
+/
+INSERT INTO VEHICULO_TAB VALUES ( VEHGASOLINA_OBJ
+('2222def', '946LT7', 'Renault', 1 , 200.12, (SELECT REF(m) FROM MECANICO_TAB m WHERE m.dni = '56217971E' ),'C', 305.45));
+/
+
+
+INSERT INTO VEHICULO_TAB VALUES( VEHELECTRICO_OBJ
+('3333ghi', '327TFT7', 'Toyota', 1 , 225.47, (SELECT REF(m) FROM MECANICO_TAB m WHERE m.dni = '45678321L' ),300, 100.02));
+/
+INSERT INTO VEHICULO_TAB VALUES( VEHELECTRICO_OBJ
+('4444jkl', '429BC45', 'BMW', 1 , 213.23, (SELECT REF(m) FROM MECANICO_TAB m WHERE m.dni = '41247895J' ),200, 075.43));
+/
+
+INSERT INTO REPARTIDOR_TAB VALUES( REPARTIDOR_OBJ
+(6, 'Juan', 'Gonzalez Romero', 673215984, 'juangr@gmail.com', 'Albacete', 'España', '44444447F',444444444444, TO_DATE('21/01/2021', 'dd/mm/yyyy'), TO_DATE('21/01/2022', 'dd/mm/yyyy'), (SELECT REF(V) FROM VEHICULO_TAB v WHERE v.matricula = '3333ghi')));
+/
+INSERT INTO REPARTIDOR_TAB VALUES( REPARTIDOR_OBJ
+(7, 'Marta', 'Sevilla Martinez', 628497533, 'martasm@gmail.com', 'Cuenca', 'España', '22222224T',222222222222, TO_DATE('16/03/2021', 'dd/mm/yyyy'), TO_DATE('16/03/2022', 'dd/mm/yyyy'), (SELECT REF(V) FROM VEHICULO_TAB v WHERE v.matricula = '4444jkl')));
+/
+INSERT INTO REPARTIDOR_TAB VALUES( REPARTIDOR_OBJ
+(8, 'Pedro', 'Plaza Fernandez', 629477821, 'pedropf@gmail.com', 'Madrid', 'España', '33333339N',333333333333, TO_DATE('09/01/2021', 'dd/mm/yyyy'), TO_DATE('09/06/2022', 'dd/mm/yyyy'), (SELECT REF(V) FROM VEHICULO_TAB v WHERE v.matricula = '1111abc')));
+/
+
+
+
+INSERT INTO PEDIDO_TAB VALUES( PEDIDO_OBJ
+(1, 12.30,12, TO_DATE('21/07/2021 22:00:00', 'dd/mm/yyyy hh24:mi:ss') ,0,2, 'en camino',LPEDIDO_NTABTYP(), (SELECT REF(r) FROM REPARTIDOR_TAB r WHERE r.ID_USUARIO = 6),(SELECT REF(c) FROM CLIENTE_TAB c WHERE c.ID_USUARIO = 1) ));
+/
+INSERT INTO PEDIDO_TAB VALUES(PEDIDO_OBJ
+(2, 21.30,12, TO_DATE('21/07/2021 23:00:00', 'dd/mm/yyyy hh24:mi:ss') ,1,1, 'en preparacion',LPEDIDO_NTABTYP(), (SELECT REF(r) FROM REPARTIDOR_TAB r WHERE r.ID_USUARIO = 6),(SELECT REF(c) FROM CLIENTE_TAB c WHERE c.ID_USUARIO = 2) ));
+/
+
+
+
+
+INSERT INTO TABLE (SELECT p.LPEDIDO 
+FROM PEDIDO_TAB p WHERE p.ID_PEDIDO ='1') VALUES(
+1, 1, 13.45, 12, 'x1', (SELECT REF(pro)FROM PRODUCTO_TAB pro
+WHERE pro.ID_PRODUCTO = 1)
+);
+/ 
+       
+INSERT INTO TABLE (SELECT p.LPEDIDO 
+FROM PEDIDO_TAB p WHERE p.ID_PEDIDO ='1') VALUES(
+2, 3, 4.10, 12, 'x4', (SELECT REF(pro)FROM PRODUCTO_TAB pro
+WHERE pro.ID_PRODUCTO = 5)
+);
+/      
+   
+INSERT INTO TABLE (SELECT p.LPEDIDO 
+FROM PEDIDO_TAB p WHERE p.ID_PEDIDO ='2') VALUES(
+3, 2, 8.45, 12, 'X2', (SELECT REF(pro)FROM PRODUCTO_TAB pro
+WHERE pro.ID_PRODUCTO = 4)
+);
+/
+INSERT INTO FACTURA_TAB VALUES ( FACTURA_OBJ
+(000001, 'Cambio ruedas', 450.52,(SELECT REF(m) FROM MECANICO_TAB m WHERE m.DNI = '56217971E'), (SELECT REF(v) FROM VEHICULO_TAB v WHERE v.matricula = '4444jkl')));
+/
+
+
+INSERT INTO FACTURA_TAB VALUES ( FACTURA_OBJ
+(000002, 'Rep. motor', 1200.49,(SELECT REF(m) FROM MECANICO_TAB m WHERE m.DNI = '56217971E'), (SELECT REF(v) FROM VEHICULO_TAB v WHERE v.matricula = '3333ghi')));
+/
+
+
+INSERT INTO FACTURA_TAB VALUES ( FACTURA_OBJ
+(000003, 'Rep. dirección', 450.52,(SELECT REF(m) FROM MECANICO_TAB m WHERE m.DNI = '41247895J'), (SELECT REF(v) FROM VEHICULO_TAB v WHERE v.matricula = '2222def')));
+/
+
