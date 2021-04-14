@@ -16,7 +16,6 @@ DROP TYPE VEHICULO_OBJ FORCE;/
 DROP TYPE LFACTURA_OBJ FORCE;/
 DROP TYPE LPEDIDO_NTABTYP FORCE;/
 DROP TYPE OFERTA_OBJ FORCE;/
-DROP TYPE LRECIBO_OBJ FORCE;/
 DROP TYPE OFERTA_NTABTYP FORCE;/
 
 CREATE OR REPLACE TYPE RESTAURANTE_OBJ AS OBJECT(
@@ -40,17 +39,18 @@ CREATE OR REPLACE TYPE BODY RESTAURANTE_OBJ AS
 	BEGIN
 		IF id_restaurante = r.id_restaurante THEN
 			IF nombre< r.nombre THEN RETURN 1;
-			ELSEIF nombre > r.nombre THEN RETURN -1;
+			ELSIF nombre > r.nombre THEN RETURN -1;
 			ELSE RETURN 0;
 			END IF;
 		ELSE
 			IF id_restaurante < r.id_restaurante THEN RETURN 1;
-			ELSEIF id_restaurante > r.id_restaurante THEN RETURN -1;
+			ELSIF id_restaurante > r.id_restaurante THEN RETURN -1;
 			ELSE RETURN 0;
 			END IF;
 		END IF;
 	END;
 END;
+/
 
 CREATE OR REPLACE TYPE OFERTA_OBJ AS OBJECT(
 codigo_oferta NUMBER(6),
@@ -146,7 +146,7 @@ CREATE OR REPLACE TYPE VEHICULO_OBJ AS OBJECT(
     marca VARCHAR2(30),
     disponibilidad NUMBER(2,0),
     peso NUMBER(7,2),
-    mecanico REF MECANICO_OBJ
+    mecanico REF MECANICO_OBJ,
 	ORDER MEMBER FUNCTION CompareMatricula(v VEHICULO_OBJ) RETURN INTEGER
 		
 )NOT FINAL;
@@ -157,14 +157,14 @@ CREATE OR REPLACE TYPE BODY VEHICULO_OBJ AS
 	BEGIN
 		IF matricula < v.matricula THEN
 			RETURN -1;
-		ELSEIF matricula > v.matricula THEN
+		ELSIF matricula > v.matricula THEN
 			RETURN 1;
 		ELSE
 			RETURN 0;
 		END IF;
 	END;
 END;
-
+/
 		
 		
 CREATE OR REPLACE TYPE VEHGASOLINA_OBJ UNDER VEHICULO_OBJ (
