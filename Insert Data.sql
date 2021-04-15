@@ -99,6 +99,9 @@ INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
 INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
 (18, 'Pechugas con salsa', 'Pechugas con salsa de setas', 4.57, 45, 'Carne', 260, 209,(SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '9' ), OFERTA_NTABTYP()));
 
+INSERT INTO PRODUCTO_TAB VALUES (PRODUCTO_OBJ
+(19, 'Salmon con Patatas', 'Salmon con patatas al horno y cebolla', 18, 2, 'Mediterraneo', 310, 210, (SELECT REF(r) FROM RESTAURANTE_TAB r WHERE r.ID_RESTAURANTE = '1' ), OFERTA_NTABTYP()));
+    
 
 --OFERTA 
 
