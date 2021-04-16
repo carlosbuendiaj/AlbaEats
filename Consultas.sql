@@ -5,6 +5,14 @@ SELECT oft.codigo_oferta AS CODIGO, pro.nombre AS PRODUCTO, oft.descuento, oft.f
 FROM producto_tab pro, TABLE(pro.oferta) oft 
 WHERE oft.finalizacion = '12/11/21'; --SYSDATE
 
+--Repartidor con más KM acumulados
+CREATE OR REPLACE VIEW REPARTIDORES_CON_MAS_KM AS
+SELECT  value(ped).repartidor.nombre AS NOMBRE_REPARTIDOR, value(ped).repartidor.numeross AS NUMERO_SS, ROUND(sum(ped.distancia), 3) as KM_TOTALES
+FROM PEDIDO_TAB ped 
+WHERE ped.estado='en camino' or ped.estado='completado no pagado' or ped.estado = 'completado' GROUP BY value(ped).repartidor 
+ORDER BY KM_TOTALES DESC
+FETCH FIRST 1 ROWS ONLY;  
+
 -- Lineas producto
 CREATE OR REPLACE VIEW LINEAS_PEDIDO_TOTALES AS
 SELECT ped.id_pedido, ped.fecha, ped.pagado, ped.precio, value(ped).pedido.nombre AS CLIENTE, value(ped).repartidor.nombre AS REPARTIDOR,  COUNT(*) AS LINEAS
