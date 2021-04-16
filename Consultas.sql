@@ -5,6 +5,14 @@ SELECT oft.codigo_oferta AS CODIGO, pro.nombre AS PRODUCTO, oft.descuento, oft.f
 FROM producto_tab pro, TABLE(pro.oferta) oft 
 WHERE oft.finalizacion = '12/11/21'; --SYSDATE
 
+-- Lineas producto
+CREATE OR REPLACE VIEW LINEAS_PEDIDO_TOTALES AS
+SELECT ped.id_pedido, ped.fecha, ped.pagado, ped.precio, value(ped).pedido.nombre AS CLIENTE, value(ped).repartidor.nombre AS REPARTIDOR,  COUNT(*) AS LINEAS
+FROM PEDIDO_TAB ped, 
+TABLE (SELECT lpedido FROM PEDIDO_TAB WHERE id_pedido = ped.id_pedido)lp
+GROUP BY ped.id_pedido, ped.fecha, ped.pagado, ped.precio, value(ped).pedido.nombre,  value(ped).repartidor.nombre
+
+
 
 -- Eliminar pedidos ya completados
 DECLARE
@@ -23,3 +31,5 @@ BEGIN
         END IF;
     END LOOP; -- se ejecuta close implícitamente
 END;
+
+
