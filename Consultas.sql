@@ -1,5 +1,25 @@
 -- Alberto
 -- Ofertas con finalizacion de hoy + restaurante
-select oft.codigo_oferta as CODIGO, pro.nombre as PRODUCTO, oft.descuento, oft.finalizacion as FECHA, value(pro).restaurante.nombre as RESTAURANTE
-from producto_tab pro, table(pro.oferta) oft 
-where oft.finalizacion = '12/11/21'
+CREATE OR REPLACE VIEW OFERTAS_HOY AS 
+SELECT oft.codigo_oferta AS CODIGO, pro.nombre AS PRODUCTO, oft.descuento, oft.finalizacion AS FECHA, VALUE(pro).restaurante.nombre AS RESTAURANTE
+FROM producto_tab pro, TABLE(pro.oferta) oft 
+WHERE oft.finalizacion = '12/11/21'; --SYSDATE
+
+
+-- Eliminar pedidos ya completados
+DECLARE
+CURSOR mycursor IS
+SELECT id_pedido, estado, pagado
+FROM PEDIDO_TAB
+FOR UPDATE NOWAIT;
+BEGIN
+    FOR ped IN mycursor LOOP
+        IF (ped.estado = 'completado' or ped.estado = 'completado no pagado' ) THEN
+            IF (ped.pagado = 0) THEN
+                UPDATE PEDIDO_TAB SET estado = 'completado no pagado' WHERE CURRENT OF mycursor;
+            ELSE 
+                DELETE FROM PEDIDO_TAB WHERE CURRENT OF mycursor;
+            END IF;
+        END IF;
+    END LOOP; -- se ejecuta close implícitamente
+END;
