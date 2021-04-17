@@ -20,7 +20,14 @@ FROM PEDIDO_TAB ped,
 TABLE (SELECT lpedido FROM PEDIDO_TAB WHERE id_pedido = ped.id_pedido)lp
 GROUP BY ped.id_pedido, ped.fecha, ped.pagado, ped.precio, value(ped).pedido.nombre,  value(ped).repartidor.nombre
 
-
+--clientes con tarjeta
+CREATE OR REPLACE VIEW CLIENTE_CON_TARJETA AS
+SELECT nombre, apellidos, telefono, correoE, direccion
+FROM CLIENTE_TAB clie 
+WHERE value(clie).metodopago.idpago  IN (
+    SELECT TREAT(VALUE(mp) AS tarjeta_obj).idpago FROM metodopago_tab mp
+    WHERE TREAT(VALUE(mp) AS tarjeta_obj).numero IS NOT NULL
+)
 
 -- Eliminar pedidos ya completados
 DECLARE
