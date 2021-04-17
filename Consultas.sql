@@ -48,3 +48,16 @@ BEGIN
 END;
 
 
+--Carlos
+--Mostrar pedidos cuyo precio sea superior a 10€
+CREATE VIEW PedMayor10 AS
+    SELECT id_pedido, precio, pagado, estado
+    FROM PEDIDO_TAB
+    WHERE Precio > 10;
+    
+ --Mostrar productos con un stock menor de 5€  
+CREATE VIEW StockMAY5 AS
+    SELECT nombre, descripcion, stock
+    FROM Producto_TAB
+    WHERE Stock<5;
+
