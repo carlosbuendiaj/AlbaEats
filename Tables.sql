@@ -98,11 +98,3 @@ CREATE TABLE FACTURA_TAB OF FACTURA_OBJ(
     );/
     
 
-CREATE TABLE LRECIBO_TAB OF LRECIBO_OBJ(
-    id_factura PRIMARY KEY,
-    CHECK(precio > 0),
-    CHECK(cantidad > 0),
-    CHECK(IVA > 0)
-    --SCOPE FOR (lpedido) IS LINEASPEDIDO_TAB
-    );/
-
