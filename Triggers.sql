@@ -15,90 +15,123 @@ ACCIÓN:
            1. Si el pedido cambia a 'en camino', ajusta la disponibilidad del vehiculo a 0.
            2. Si por el contrario cambia a otro estado (cancelado, en preparacion,...) pone la disponibilidad del vehiculo a 1.
 */
-create or replace TRIGGER ASSIGNACION_REPARTIDOR
+
+
+CREATE OR REPLACE TRIGGER ASSIGNACION_REPARTIDOR
 FOR INSERT OR UPDATE  ON PEDIDO_TAB
 COMPOUND TRIGGER
     
-
+    -- Coleccion que almacena los ID de los pedidos que son insertados
     TYPE TID_PEDIDO IS TABLE OF PEDIDO_TAB.id_pedido%TYPE INDEX BY BINARY_INTEGER;
-    VTPEDIDO_ID TID_PEDIDO;
+    VTPEDIDO_ID TID_PEDIDO; 
     
+    -- Coleccion que almacena las distancias de los pedidos que son insertados
     TYPE TDISTANCIAS IS TABLE OF PEDIDO_TAB.distancia%TYPE INDEX BY BINARY_INTEGER;
-    VTDISTANCIAS TDISTANCIAS;
+    VTDISTANCIAS TDISTANCIAS; 
+    
+    -- Coleccion que almacena los estados de los pedidos que son insertados
+    TYPE estados IS TABLE OF VARCHAR2(30) INDEX BY BINARY_INTEGER;
+    VESTADOS estados;
+    
+    -- Indice para la insercicion de los filas iinsertadas en las colecciones
+    IND BINARY_INTEGER := 0;
+    
+    -- Coleccion que almacena las matriculas de todos los vehiculos de tipo electrico
     TYPE MATRICULAS_ELECTRICOS IS TABLE OF VEHICULO_TAB.matricula%TYPE;
     VMATRICULAS_ELECTRICOS MATRICULAS_ELECTRICOS;
 
-
+    -- Coleccion que almacena la autonomia de todos los vehiculos de tipo electrico
     TYPE AUTONOMIAS_ELECTRICOS IS TABLE OF NUMBER(3,0);
     VAUTONOMIAS_ELECTRICOS AUTONOMIAS_ELECTRICOS;
     
-    IND BINARY_INTEGER := 0;
-
+    
+    -- Variables necesarias para la ejecucion del trigger
     repartidor_id  REPARTIDOR_TAB.id_usuario%TYPE;
     fechabaja_repartidor REPARTIDOR_TAB.fechabaja%TYPE;
     vehiculo_matricula  VEHICULO_TAB.matricula%TYPE;
     currentdisp_vehiculo VEHICULO_TAB.disponibilidad%TYPE;
-
-    type estados is table of varchar2(30) index by binary_integer;
-    VESTADOS estados;
     NUEVO_ESTADO varchar2(30);
-    esElectrico NUMBER(1);
+    esElectrico NUMBER(1); 
     indiceElectrico NUMBER(20);
+    
+    
     BEFORE STATEMENT IS
-     BEGIN
-        --obtener matriculas de todos los electricos
-        select treat(value(v) as vehelectrico_obj).matricula, treat(value(v) as vehelectrico_obj).autonomia BULK COLLECT INTO VMATRICULAS_ELECTRICOS, VAUTONOMIAS_ELECTRICOS
-        from vehiculo_tab v
-        where treat(value(v) as vehelectrico_obj).matricula <> 'null' ;
-     END BEFORE STATEMENT;
+    BEGIN
+        
+        --OBTENEMOS LAS MATRICULAS DE TODOS LOS ELECTRICOS Y LAS ALMACENAMOS EN LA COLLECCION
+        SELECT TREAT(VALUE(v) AS vehelectrico_obj).matricula, TREAT(VALUE(v) AS vehelectrico_obj).autonomia 
+        BULK COLLECT INTO VMATRICULAS_ELECTRICOS, VAUTONOMIAS_ELECTRICOS
+        FROM vehiculo_tab v
+        WHERE TREAT(VALUE(v) AS vehelectrico_obj).matricula <> 'null' ;
+        
+    END BEFORE STATEMENT;
 
-     BEFORE EACH ROW IS
-     BEGIN
+    BEFORE EACH ROW IS
+    BEGIN
+        
+        -- ALMACENAMOS EL ID, ESTADO Y DISTANCIA DE CADA NUEVO PEDIDO EN SUS COLECCIONES
         IND := IND +1;
         VTPEDIDO_ID(IND) := :new.id_pedido;
         VESTADOS(IND):= :new.estado;
         VTDISTANCIAS(IND):= :new.distancia;
-     END BEFORE EACH ROW;
+        
+    END BEFORE EACH ROW;
 
 
-AFTER STATEMENT IS
-BEGIN
-FOR i IN 1..IND LOOP
-    esElectrico := 0;
-    indiceElectrico := 0;
-    NUEVO_ESTADO:= VESTADOS(i);
-    SELECT value(p).repartidor.id_usuario, value(p).repartidor.fechabaja into repartidor_id, fechabaja_repartidor FROM PEDIDO_TAB p WHERE ID_PEDIDO =  VTPEDIDO_ID(i);
-    SELECT value(r).vehiculo.matricula, value(r).vehiculo.disponibilidad  into vehiculo_matricula, currentdisp_vehiculo FROM REPARTIDOR_TAB r WHERE r.id_usuario = repartidor_id; 
+    AFTER STATEMENT IS
+    BEGIN
+        -- Recorremos todos los datos almacenados
+        FOR i IN 1..IND LOOP
+            esElectrico := 0;
+            indiceElectrico := 0;
+            NUEVO_ESTADO:= VESTADOS(i);
+            
+            -- Obtenemos el id y la fecha de baja del repartidor de esta iteracion
+            SELECT VALUE(p).repartidor.id_usuario, VALUE(p).repartidor.fechabaja 
+            INTO repartidor_id, fechabaja_repartidor 
+            FROM PEDIDO_TAB p 
+            WHERE ID_PEDIDO =  VTPEDIDO_ID(i);
 
-    FOR j IN 1..VMATRICULAS_ELECTRICOS.COUNT LOOP
-        IF vehiculo_matricula =  VMATRICULAS_ELECTRICOS(j) THEN  
-            esElectrico := 1;
-            indiceElectrico := j;
-        END IF;
-    END LOOP;
+            -- Obtenemos el la matricula y la disponibilidad del vehiculo de esta iteracion
+            SELECT VALUE(r).vehiculo.matricula, VALUE(r).vehiculo.disponibilidad  
+            INTO vehiculo_matricula, currentdisp_vehiculo 
+            FROM REPARTIDOR_TAB r 
+            WHERE r.id_usuario = repartidor_id; 
+
+            -- Recorremos todas las matriculas almacenadas de los vehiculos que son electricos
+            FOR j IN 1..VMATRICULAS_ELECTRICOS.COUNT LOOP
+                -- Si una de ellas coincide con la matricula actual, el vehiculo es electrico
+                IF vehiculo_matricula =  VMATRICULAS_ELECTRICOS(j) THEN  
+                    esElectrico := 1;
+                    indiceElectrico := j;
+                END IF;
+            END LOOP;
     
-     
-    IF INSERTING then
-        IF currentdisp_vehiculo = 0 then
-            RAISE_APPLICATION_ERROR (-20001, '¡No se puede asignar un pedido a un repartidor que ya está repartiendo!');
-        ELSIF fechabaja_repartidor < SYSDATE then
-            RAISE_APPLICATION_ERROR (-20001, '¡No se puede asignar un pedido a un repartidor que está fuera de contrato!');
-        END IF;
-        IF esElectrico = 1 THEN 
-            IF VAUTONOMIAS_ELECTRICOS(indiceElectrico) < VTDISTANCIAS(i) THEN 
-                RAISE_APPLICATION_ERROR (-20001, 'No se puede asignar este pedido a este repartirdor. Su autonomia (' || VAUTONOMIAS_ELECTRICOS(indiceElectrico) || ') es menor que la distancia (' || VTDISTANCIAS(i) || ').');
+            --En caso de que estemos insertando
+            IF INSERTING then
+                --Comprobamos si el vehiculo esta disponible y si el repartidor esta en nomina
+                IF currentdisp_vehiculo = 0 THEN
+                    RAISE_APPLICATION_ERROR (-20001, '¡No se puede asignar un pedido a un repartidor que ya está repartiendo!');
+                ELSIF fechabaja_repartidor < SYSDATE THEN
+                    RAISE_APPLICATION_ERROR (-20001, '¡No se puede asignar un pedido a un repartidor que está fuera de contrato!');
+                END IF;
+                
+                --Si el vehiculo es electrico, comprobamos si su autonomia es menor que la distancia del pedido
+                IF esElectrico = 1 THEN 
+                    IF VAUTONOMIAS_ELECTRICOS(indiceElectrico) < VTDISTANCIAS(i) THEN 
+                    RAISE_APPLICATION_ERROR (-20001, 'No se puede asignar este pedido a este repartirdor. Su autonomia (' || VAUTONOMIAS_ELECTRICOS(indiceElectrico) || ') es menor que la distancia (' || VTDISTANCIAS(i) || ').');
+                END IF;
             END IF;
-        END IF;
-    ELSIF UPDATING ('estado') then
-        IF (NUEVO_ESTADO) = 'en camino' then
-            UPDATE VEHICULO_TAB SET DISPONIBILIDAD = 0 where matricula = vehiculo_matricula;
-        ELSE 
-            UPDATE VEHICULO_TAB SET DISPONIBILIDAD = 1 where matricula = vehiculo_matricula;
-        END IF;
-
-    END IF;
-END LOOP;
-
-END AFTER STATEMENT;
-
+            
+            --En caso de actualizar, cambiamos la diponibilidad del vehiculo
+            ELSIF UPDATING ('estado') then
+                IF (NUEVO_ESTADO) = 'en camino' then
+                    UPDATE VEHICULO_TAB SET DISPONIBILIDAD = 0 where matricula = vehiculo_matricula;
+                ELSE 
+                    UPDATE VEHICULO_TAB SET DISPONIBILIDAD = 1 where matricula = vehiculo_matricula;
+                END IF;
+            END IF;
+        END LOOP;
+        
+    END AFTER STATEMENT;
 END ASSIGNACION_REPARTIDOR;
