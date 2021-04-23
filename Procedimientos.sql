@@ -1,3 +1,5 @@
+--Dado el id de un pedido, calcula el precio total del pedido (sumatorio de los importes de cada pedido * cantidad + iva añadido) y actualiza el pedido con este valor.
+
 create or replace PROCEDURE ACTUALIZAR_PRECIO_PEDIDO (ID_PED NUMBER) AS 
 BEGIN
   
@@ -23,3 +25,7 @@ END;
   
   
 END ACTUALIZAR_PRECIO_PEDIDO;
+
+--next
+   --DADO EL NOMBRE DE UNA CIUDAD, MOSTRAR LA INFORMACION. Esta informacion mostrara el nombre de los clientes, asi como el ultimo metodo de pago que tiene cada cliente registrado,
+   --un porcentage de tarjeta/efectuvo y el total recaudad (suma del importe de todos los pedidos)
