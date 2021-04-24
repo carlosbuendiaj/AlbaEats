@@ -68,6 +68,17 @@ CREATE VIEW StockMAY5 AS
     FROM Producto_TAB
     WHERE Stock<5;
 
+--Mostrar los restaurantes pertenecientes a Madrid que tengan pizzas
+CREATE OR REPLACE VIEW RestMyP AS 
+    (SELECT p.restaurante.nombre, p.restaurante.direccion
+    FROM PRODUCTO_TAB p
+    WHERE  p.tipo_producto='Pizza'  ) 
+    INTERSECT
+    (SELECT nombre, direccion
+    FROM RESTAURANTE_TAB 
+    WHERE ciudad='Madrid'
+    )
+    ;
 
 -- Alfonso
 -- 1.- Mostrar los Mecánicos que actualmente estén en periodo de contratación y haya realizado una reparación 
