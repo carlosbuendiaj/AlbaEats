@@ -3,7 +3,14 @@
 CREATE OR REPLACE VIEW OFERTAS_HOY AS 
 SELECT oft.codigo_oferta AS CODIGO, pro.nombre AS PRODUCTO, oft.descuento, oft.finalizacion AS FECHA, VALUE(pro).restaurante.nombre AS RESTAURANTE
 FROM producto_tab pro, TABLE(pro.oferta) oft 
-WHERE oft.finalizacion = '12/11/21'; --SYSDATE
+WHERE oft.finalizacion = '12/11/21'; 
+
+--Vehiculos que aún no han repartido
+CREATE VIEW VEHICULOS_SIN_USO AS
+SELECT value(r).vehiculo.matricula as Matricula, value(r).vehiculo.marca as Marca, value(r).vehiculo.modelo as Modelo, r.nombre
+from repartidor_tab r WHERE id_usuario NOT IN (
+SELECT value(p).repartidor.id_usuario FROM PEDIDO_TAB p    group by value(p).repartidor.id_usuario
+);
 
 --Repartidor con más KM acumulados
 CREATE OR REPLACE VIEW REPARTIDORES_CON_MAS_KM AS
