@@ -175,6 +175,9 @@ INSERT INTO REPARTIDOR_TAB VALUES( REPARTIDOR_OBJ
 INSERT INTO REPARTIDOR_TAB VALUES( REPARTIDOR_OBJ
 (8, 'Pedro', 'Plaza Fernandez', 629477821, 'pedropf@gmail.com', 'Madrid', 'España', '33333339N',333333333333, TO_DATE('09/01/2021', 'dd/mm/yyyy'), TO_DATE('09/06/2022', 'dd/mm/yyyy'), (SELECT REF(V) FROM VEHICULO_TAB v WHERE v.matricula = '1111abc')));
 /
+INSERT INTO REPARTIDOR_TAB VALUES( REPARTIDOR_OBJ
+(9, 'Antonio', 'Martinez Fernandez', 623748202, 'antoniooof@gmail.com', 'Albacete', 'España', '2232333j',232332323, TO_DATE('09/01/2021', 'dd/mm/yyyy'), TO_DATE('09/06/2022', 'dd/mm/yyyy'), (SELECT REF(V) FROM VEHICULO_TAB v WHERE v.matricula = '4444jkl')));
+/
 
 
 
