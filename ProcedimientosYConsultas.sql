@@ -103,3 +103,39 @@ create or replace PROCEDURE MOSTRAR_HISTORIAL (correo VARCHAR2) IS
     DBMS_OUTPUT.PUT_LINE('-');
     
 END;
+
+                                        
+create or replace PROCEDURE DESPEDIR_REPARTIDOR (dniFired VARCHAR2) IS
+
+BEGIN
+
+DECLARE
+
+     repart REF REPARTIDOR_OBJ;
+     idREP  REPARTIDOR_TAB.id_usuario%TYPE;
+     dniREP REPARTIDOR_TAB.dni%TYPE;
+     
+     vehi REF VEHICULO_OBJ;
+     matriculaVEH   VEHICULO_TAB.matricula%TYPE;
+BEGIN
+    --Buscamos y almacenamos la ref del repartidor
+    SELECT REF(c) INTO repart FROM REPARTIDOR_TAB c WHERE dniFired = c.dni;
+    
+    --almacenamos la ref del vehiculo del repartidor
+    SELECT DEREF(repart).vehiculo INTO vehi FROM dual;
+    
+    --buscamos el vehiculo del repartidor y guardamos su matricula.
+    SELECT DEREF(vehi).matricula into matriculaVEH from dual;
+    
+    --Actualizamos la fecha de baja del repartidor a hoy y eliminamos el vehiculo de la lista.
+    
+    DBMS_OUTPUT.PUT_LINE('Actualizando fecha de baja del repartidor');
+    UPDATE REPARTIDOR_TAB SET fechabaja = '01/01/2024' WHERE  id_usuario= idREP;
+    DBMS_OUTPUT.PUT_LINE('Eliminando vehiculo del repartidor de la DB');
+    DELETE FROM VEHICULO_TAB WHERE matricula = matriculaVEH;
+
+
+END;
+
+
+END DESPEDIR_REPARTIDOR;
