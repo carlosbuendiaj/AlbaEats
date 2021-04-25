@@ -137,7 +137,6 @@ select * from
  
 
 -- 5.- Mostrar los restaurantes que tengan carne como producto y se localicen en Cuenca o Albacete
--- y el producto tenga al menos una oferta. SIN TERMINAR
 
 create view pcca as
 (select p.restaurante.nombre, p.restaurante.ciudad from producto_tab p
