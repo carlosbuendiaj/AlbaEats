@@ -157,6 +157,48 @@ BEGIN
         
 END;
 
+--Carlos
+create or replace TRIGGER ACTUALIZACION_PRECIO
+FOR INSERT OR UPDATE ON  PEDIDO_TAB
+COMPOUND TRIGGER
+   
+     --GUARDO MATRICULA de VEHICULO_TAB
+      TYPE MATRICULAS IS TABLE OF VEHICULO_TAB.matricula%TYPE;
+            V_MATRICULAS MATRICULAS;
+      --GUARDO DNI REPARTIDOR
+      TYPE DNI_REP IS TABLE OF REPARTIDOR_TAB.DNI%TYPE;
+            V_DNI_REP DNI_REP;
+    --GUARDO LA ID DE PEDIDO
+      TYPE IDPEDIDO IS TABLE OF pedido_tab.id_pedido%TYPE;
+            V_IDPEDIDO IDPEDIDO;     
+
+      TYPE repartidores_con_v_e IS TABLE OF repartidor_tab.vehiculo%type;
+            v_repartidores_con_v_e repartidores_con_v_e;
+
+
+      --GUARDO LA AUTONOMIA DE LOS VEHICULOS ELECTRICOS
+      TYPE AUTONOMIA_E IS TABLE OF NUMBER(3);
+        V_AUTONOMIA_E AUTONOMIA_E;
+
+    --VARIABLES
+       v_precio pedido_tab.precio%TYPE;
+       v_distancia pedido_tab.distancia%TYPE;
+       v_count binary_integer := 0; 
+     --Executed before DML statement
+     BEFORE STATEMENT IS
+     BEGIN
+            --OBTENGO MATRICULAS Y AUTONOMIA DE LOS VEHICULOS ELECTRICOS
+            SELECT TREAT(VALUE(v) AS vehelectrico_obj).matricula, TREAT(VALUE(v) AS vehelectrico_obj).autonomia 
+            BULK COLLECT INTO  V_MATRICULAS, V_AUTONOMIA_E
+            FROM vehiculo_tab v
+            WHERE TREAT(VALUE(v) AS vehelectrico_obj).matricula is not null ; --POSIBLE ERROR EN EL IS NOT NULL
+
+            --OBTENGO LOS DNIS DE LOS REPARTIDORES
+            SELECT DNI
+            BULK COLLECT INTO V_DNI_REP
+            FROM REPARTIDOR_TAB
+            WHERE DNI IS NOT NULL;
+     END BEFORE STATEMENT;
                          
 --Alfonso
 /*Cambiar la disponibilidad del vehículo cuando se lleve a un mecánico y generar una factura de la reparación.
