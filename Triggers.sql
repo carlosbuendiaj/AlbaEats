@@ -156,3 +156,177 @@ BEGIN
     :new.codigo_postal, (SELECT REF(m) FROM METODOPAGO_TAB m WHERE m.idpago = :new.idpago )));
         
 END;
+
+                         
+--Alfonso
+/*Cambiar la disponibilidad del vehículo cuando se lleve a un mecánico y generar una factura de la reparación.
+                         
+EVENTO: Insertar una factura y actualizar los datos del vehiculo                          
+
+PASOS:
+	1. Insertar una mátricula y comprobar que su disponibilidad está a 1.
+	2. Cambiar la disponibilidad a 0 de ese vehiculo.
+	3. Generar una factura con datos insertados que añadamos.
+           3.1. En caso de insertar mal los datos saltará una excepción o datos inexistentes.
+
+*/
+CREATE OR REPLACE TRIGGER reparacion
+FOR INSERT OR UPDATE ON VEHICULO_TAB
+COMPOUND TRIGGER
+    
+    -- Coleccion que almacena las matriculas de todos los vehiculos de tipo electrico
+    TYPE MATRICULAS_ELECTRICOS IS TABLE OF VEHICULO_TAB.matricula%TYPE;
+    VMATRICULAS_ELECTRICOS MATRICULAS_ELECTRICOS;
+    
+    -- Coleccion que almacena la disponibilidad de todos los vehiculos de tipo electrico
+    TYPE DISPONIBILIDAD_ELECTRICOS IS TABLE OF VEHICULO_TAB.disponibilidad%TYPE;
+    VDISP_ELECTRICOS DISPONIBILIDAD_ELECTRICOS;
+    
+    -- Coleccion que almacena los dni de los mecanicos de todos los vehiculos de tipo electrico
+    TYPE MECANICODNI_ELECTRICOS IS TABLE OF VEHICULO_TAB.mecanico%TYPE;
+    VMDNI_ELECTRICOS MECANICODNI_ELECTRICOS;
+    
+    -- Coleccion que almacena las matriculas de todos los vehiculos de tipo gasolina
+    TYPE MATRICULAS_GASOLINA IS TABLE OF VEHICULO_TAB.matricula%TYPE;
+    VMATRICULAS_GASOLINA MATRICULAS_GASOLINA;
+    
+    -- Coleccion que almacena las matriculas de todos los vehiculos de tipo gasolina
+    TYPE DISPONIBILIDAD_GASOLINA IS TABLE OF VEHICULO_TAB.disponibilidad%TYPE;
+    VDISP_GASOLINA DISPONIBILIDAD_GASOLINA;
+    
+    -- Coleccion que almacena los dni de los mecanicos de todos los vehiculos de tipo electrico
+    TYPE MECANICODNI_GASOLINA IS TABLE OF VEHICULO_TAB.mecanico%TYPE;
+    VMDNI_GASOLINA MECANICODNI_GASOLINA;
+    
+    -- Coleccion que almacena los dni de todos los mecanicos
+    TYPE DNI_MECANICO IS TABLE OF MECANICO_TAB.dni%TYPE;
+    DNIM DNI_MECANICO;
+    
+    -- Coleccion que almacena los id de todas las facturas
+    TYPE ID_FACTURA IS TABLE OF FACTURA_TAB.id_factura%TYPE;
+    IDF ID_FACTURA;
+    
+      
+    --Otras variables
+    vehiculo_matricula  VEHICULO_TAB.matricula%TYPE;
+    esElectrico NUMBER(1);
+    mat VARCHAR2(7);
+    contfactura NUMBER(10);
+    auxloop NUMBER(10);
+    nid_factura NUMBER(10,0);
+    ndescripcion VARCHAR2(20);
+    nimporte NUMBER(8,2);
+    guardadni varchar2(9);
+    
+    BEFORE STATEMENT IS
+    BEGIN
+        --Obtenemos las matriculas de todos los electricos y las almacenamos en la coleccion
+        SELECT TREAT(VALUE(v) AS vehelectrico_obj).matricula, TREAT(VALUE(v) AS vehelectrico_obj).disponibilidad, TREAT(VALUE(v) AS vehelectrico_obj).mecanico
+        BULK COLLECT INTO VMATRICULAS_ELECTRICOS, VDISP_ELECTRICOS, VMDNI_ELECTRICOS
+        FROM vehiculo_tab v
+        WHERE TREAT(VALUE(v) AS vehelectrico_obj).matricula <> 'null' ;
+        
+        --Obtenemos las matriculas de todos los gasolina y las almacenamos en la coleccion
+        SELECT TREAT(VALUE(v) AS vehgasolina_obj).matricula, TREAT(VALUE(v) AS vehgasolina_obj).disponibilidad, TREAT(VALUE(v) AS vehgasolina_obj).mecanico
+        BULK COLLECT INTO VMATRICULAS_GASOLINA, VDISP_GASOLINA, VMDNI_GASOLINA
+        FROM vehiculo_tab v
+        WHERE TREAT(VALUE(v) AS vehelectrico_obj).matricula <> 'null' ;
+        
+        --Obtenemos los dni de todos los mecanicos y los almacenaos en la coleccion
+        SELECT VALUE(m).dni
+        BULK COLLECT INTO DNIM
+        FROM MECANICO_TAB m
+        WHERE VALUE(m).dni IS NOT NULL;
+        
+        --Obtenemos los dni de todos los mecanicos y los almacenaos en la coleccion
+        SELECT VALUE(f).id_factura
+        BULK COLLECT INTO IDF
+        FROM FACTURA_TAB f
+        WHERE VALUE(f).id_factura IS NOT NULL;
+        
+    END BEFORE STATEMENT;
+    
+    AFTER STATEMENT IS
+    BEGIN
+    
+    contfactura := 1;
+    
+    --Añadimos la matrícula del vehiculo a reparar y si es electrico o no (1 --> SI, 0 -->NO)
+    mat := '2222def';
+    esElectrico := 0;
+    
+    
+    --Comprobamos si es electrico o de gasolina
+    IF esElectrico = 1 THEN
+        -- Recorremos todas las matriculas almacenadas de los vehiculos que son electricos
+        FOR i IN 1..VMATRICULAS_ELECTRICOS.COUNT LOOP
+            -- Comprobacion de que esta la matricula y el vehiculo esta disponible
+            IF mat =  VMATRICULAS_ELECTRICOS(i) THEN  
+                IF VDISP_ELECTRICOS(i) = 1 THEN
+                   UPDATE VEHICULO_TAB SET DISPONIBILIDAD = 0 where mat = VMATRICULAS_ELECTRICOS(i);
+                END IF;
+            END IF;
+        END LOOP;
+     
+     
+    ELSE
+    -- Recorremos todas las matriculas almacenadas de los vehiculos que son gasolina
+        FOR i IN 1..VMATRICULAS_GASOLINA.COUNT LOOP
+            -- Comprobacion de que esta la matricula y el vehiculo esta disponible
+            IF mat =  VMATRICULAS_GASOLINA(i) THEN  
+                IF VDISP_GASOLINA(i) = 1 THEN
+                   UPDATE VEHICULO_TAB SET DISPONIBILIDAD = 0 where mat = VMATRICULAS_GASOLINA(i);
+                END IF;
+             END IF;
+        END LOOP;
+     END IF;
+    
+    --Agregamos los datos que queremos generar en la factura
+    nid_factura := 000001;
+    ndescripcion := 'Rep. frenos';
+    nimporte :=  600;
+    
+    --Realiza un blucle para evitar duplicados de id
+    FOR j IN 1..IDF.COUNT LOOP
+        IF nid_factura = IDF(j) THEN
+            nid_factura := nid_factura + 000001;
+        END IF;
+    END LOOP;
+    
+    --Llamada al procedimiento para añadir los datos
+    IF esElectrico = 1 THEN
+        FOR k IN 1..VMATRICULAS_ELECTRICOS.COUNT LOOP
+            IF mat =  VMATRICULAS_ELECTRICOS(k) THEN
+                FOR ki IN 1..DNIM.COUNT LOOP
+                   FOR kj IN 1..VMDNI_ELECTRICOS.COUNT LOOP 
+                        IF DNIM(k) = VMDNI_ELECTRICOS(kj) THEN
+                        CREAR_FACTURA(nid_factura, ndescripcion, nimporte, mat, DNIM(ki));
+                        END IF;
+                    END LOOP;
+                END LOOP;
+            END IF;
+        END LOOP;
+    ELSE
+         FOR k IN 1..VMATRICULAS_GASOLINA.COUNT LOOP
+            IF mat =  VMATRICULAS_GASOLINA(k) THEN
+                FOR ki IN 1..DNIM.COUNT LOOP
+                   FOR kj IN 1..VMDNI_GASOLINA.COUNT LOOP 
+                        IF DNIM(ki) = VMDNI_GASOLINA(kj) THEN
+                        CREAR_FACTURA(nid_factura, ndescripcion, nimporte, mat, DNIM(ki));
+                        END IF;
+                    END LOOP;
+                END LOOP;
+            END IF;
+        END LOOP;
+    END IF;
+    END AFTER STATEMENT;
+END reparacion;
+                        
+                         
+                         
+                         
+                         
+                         
+                         
+                         
+                         
