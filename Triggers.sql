@@ -135,3 +135,24 @@ COMPOUND TRIGGER
         
     END AFTER STATEMENT;
 END ASSIGNACION_REPARTIDOR;
+
+
+
+
+-- TRIGGER INSTEAD OF QUE INSERTA EN CLIENTE Y TARJETA EN VEZ DE LA VISTA CLIENTE_CON_TARJETA
+
+create or replace TRIGGER insert_on_cliente_tarjeta
+INSTEAD OF INSERT
+ON CLIENTE_CON_TARJETA
+DECLARE
+
+BEGIN
+
+    INSERT INTO METODOPAGO_TAB VALUES (TARJETA_OBJ
+    (:new.idpago, SYSDATE,  :new.numerotarjeta, :new.fecha_caducidad, :new.cvv, :new.propietario));
+    
+    INSERT INTO CLIENTE_TAB VALUES (CLIENTE_OBJ
+    ( :new.id_usuario,:new.nombre, :new.apellidos, :new.telefono, :new.CORREOE, :new.ciudad, 'N/A', :new.direccion,
+    :new.codigo_postal, (SELECT REF(m) FROM METODOPAGO_TAB m WHERE m.idpago = :new.idpago )));
+        
+END;
