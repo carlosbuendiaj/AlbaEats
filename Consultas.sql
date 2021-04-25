@@ -60,17 +60,12 @@ END;
 
 
 --Carlos
---Mostrar pedidos cuyo precio sea superior a 10€
+--Mostrar pedido cuyo precio sea superior a 10€
 CREATE VIEW PedMayor10 AS
     SELECT id_pedido, precio, pagado, estado
     FROM PEDIDO_TAB
     WHERE Precio > 10;
     
- --Mostrar productos con un stock menor de 5€  
-CREATE VIEW StockMAY5 AS
-    SELECT nombre, descripcion, stock
-    FROM Producto_TAB
-    WHERE Stock<5;
 
 --Mostrar los restaurantes pertenecientes a Madrid que tengan pizzas
 CREATE OR REPLACE VIEW RestMyP AS 
@@ -80,10 +75,46 @@ CREATE OR REPLACE VIEW RestMyP AS
     INTERSECT
     (SELECT nombre, direccion
     FROM RESTAURANTE_TAB 
-    WHERE ciudad='Madrid'
-    )
-    ;
+    WHERE ciudad='Madrid');
 
+--Mostrar productos con un stock que sea menor de 5€    
+CREATE VIEW StockMAY5 AS
+    SELECT nombre, descripcion, stock
+    FROM Producto_TAB
+    WHERE Stock<5;
+
+
+--Sumar todo el dinero gastado por Lucia
+CREATE OR REPLACE VIEW DINERO_LUCIA AS
+(SELECT p.pedido.id_usuario, p.pedido.nombre, p.pedido.apellidos, p.precio
+FROM PEDIDO_TAB p
+WHERE p.PAGADO = 1
+GROUP BY p.pedido.id_usuario, p.pedido.nombre, p.pedido.apellidos, p.precio
+HAVING COUNT(p.PRECIO) > 0)
+INTERSECT
+(SELECT id_usuario, nombre, apellidos, p.precio
+FROM CLIENTE_TAB , pedido_tab p
+WHERE nombre = 'Lucia' );
+
+
+--Mostrar las ofertas de pizzas que no han acabado
+CREATE OR REPLACE VIEW OFERTAS_SIN_FINALIZAR AS
+SELECT p.nombre, p.id_producto, o.finalizacion
+FROM producto_tab p,
+TABLE 
+(SELECT oferta
+FROM PRODUCTO_TAB 
+WHERE producto_tab.id_producto = p.id_producto
+)o
+WHERE p.tipo_producto = 'Pizza' AND o.finalizacion > sysdate
+ORDER BY(o.FINALIZACION)
+;
+
+
+--BORRAR LOS PRODUCTOS QUE TENGAN 0 de stock
+DELETE
+FROM PRODUCTO_TAB p
+WHERE p.stock <0 OR p.stock =0;
 -- Alfonso
 -- 1.- Mostrar los Mecánicos que actualmente estén en periodo de contratación y haya realizado una reparación 
 
