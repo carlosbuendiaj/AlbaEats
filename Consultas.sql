@@ -29,7 +29,11 @@ GROUP BY ped.id_pedido, ped.fecha, ped.pagado, ped.precio, value(ped).pedido.nom
 
 --clientes con tarjeta
 CREATE OR REPLACE VIEW CLIENTE_CON_TARJETA AS
-SELECT nombre, apellidos, telefono, correoE, direccion
+SELECT nombre, apellidos, telefono, correoE, direccion,  
+TREAT(DEREF(metodopago)AS TARJETA_OBJ).numero as numeroTarjeta,
+TREAT(DEREF(metodopago)AS TARJETA_OBJ).cvv as CVV,
+TREAT(DEREF(metodopago)AS TARJETA_OBJ).fecha_caducidad as FechaCaducidad,
+TREAT(DEREF(metodopago)AS TARJETA_OBJ).propiertario as Propietario
 FROM CLIENTE_TAB clie 
 WHERE value(clie).metodopago.idpago  IN (
     SELECT TREAT(VALUE(mp) AS tarjeta_obj).idpago FROM metodopago_tab mp
