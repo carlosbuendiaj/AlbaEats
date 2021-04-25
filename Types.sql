@@ -206,7 +206,7 @@ pedido REF CLIENTE_OBJ
 
 CREATE OR REPLACE TYPE FACTURA_OBJ AS OBJECT(
     id_factura NUMBER(10,0),
-    descripcion VARCHAR2(20),
+    descripcion VARCHAR2(50),
     importe NUMBER(8,2),
     mecanico REF MECANICO_OBJ,
     vehiculo REF VEHICULO_OBJ
