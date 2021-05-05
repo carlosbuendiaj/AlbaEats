@@ -695,10 +695,12 @@ WHERE p.stock <0 OR p.stock =0;
 
 /
 
+
+
 -- Alfonso
 -- 1.- Mostrar los Mecánicos que actualmente estén en periodo de contratación y haya realizado una reparación 
 
-create view mecrep as				
+create view MECANICOS_VIGENTES as				
 select * from
 	(select * from
 		(select f.mecanico.dni as dni, f.mecanico.nombre as nombre, f.mecanico.empresa as empresa from factura_tab f)
@@ -714,7 +716,7 @@ select * from
 
 --2.- Mostrar todos los vehículos eléctricos cuya autonomia sea superior a 190km y la persona que lo repara es 'Fernando'
 
-create view autonomia as
+create view AUTONOMIA_F as
 select treat(value(v) as vehelectrico_obj).matricula as matricula , treat(value(v) as vehelectrico_obj).autonomia as autonomia, 
 treat(value(v) as vehelectrico_obj).emisiones as emisiones ,v.modelo, v.marca, v.disponibilidad
 from vehiculo_tab v
@@ -726,7 +728,7 @@ and v.mecanico.nombre = (select nombre from mecanico_tab
 
 --3.- Mostrar las facturas del vehículo con matrícula x y reparados por el mecánico y.
 
-create view factmec as
+create view FACTURAS_MECANICO as
 select f.id_factura, f.descripcion, f.importe, f.mecanico.dni, f.vehiculo.matricula 
 from FACTURA_TAB f
 where f.mecanico.dni in (select dni from MECANICO_TAB where dni = '56217971E' ) 
@@ -736,7 +738,7 @@ where f.mecanico.dni in (select dni from MECANICO_TAB where dni = '56217971E' )
 /
 --4.- Mostrar los vehículos que están en uso (Pedido en camino).
 
-create view vuso as
+create view VEHICULOS_USO as
 select * from
 	(select * from
 		(select r.id_usuario from repartidor_tab r)
@@ -749,7 +751,7 @@ select * from
 /
 -- 5.- Mostrar los restaurantes que tengan carne como producto y se localicen en Cuenca o Albacete
 
-create view pcca as
+create view PRODUCTOS_CA as
 (select p.restaurante.nombre, p.restaurante.ciudad from producto_tab p
 where p.tipo_producto = 'Carne' )
 intersect
@@ -759,7 +761,7 @@ where ciudad = 'Cuenca' or ciudad = 'Albacete')
 /
 --6.- Sumar todos los productos de los restaurantes pertenecientes a Albacete.
 
-create view sumaab as
+create view PRODUCTOSA as
 select count(p.id_producto), p.restaurante.ciudad 
 from producto_tab p
 where p.restaurante.ciudad = 'Albacete'
