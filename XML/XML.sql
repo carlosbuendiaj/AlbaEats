@@ -1,5 +1,5 @@
 -----------------
---XML ALFONSO
+--XML alfonso
 ----------------
 
 --TABLA PROVEEDORES
@@ -112,5 +112,26 @@ create index idx_proveedor ON ddbblocal.provrest(proveedor) INDEXTYPE IS
 XDB.XMLINDEX PARAMETERS ('PATHS (INCLUDE (/proveedores/proveedor/dni))');
 
 
+--Mostrar valor
 select extract(proveedor, '/proveedores/proveedor/dni/text()') 
 from provrest p where id = 4;
+
+select
+id, r.proveedor.extract('/proveedores/proveedor').getStringVal() 
+from provrest r where id = 2;
+
+
+
+--Consultas
+
+select id, p.proveedor.extract('/proveedores/proveedor/nombre/text()').getStringVal() 
+from provrest p where p.proveedor.extract('/proveedores/proveedor/ciudad/text()').getStringVal() = 'Cuenca';
+
+
+
+
+
+
+
+
+
