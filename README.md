@@ -4,11 +4,11 @@ El proyecto contiene una base de datos de una empresa ficticia llamada AlbaEats,
 
 Como añadido, contiene tablas creadas en XML, junto con algunas consultas XML.
 
-Creado conjuntamente por
+Creado conjuntamente por:
 
-/albertonov
+    /albertonov
 
-/alfonm8
+    /alfonm8
 
-/carlosbuendiaj
+    /carlosbuendiaj
 
