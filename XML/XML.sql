@@ -43,96 +43,6 @@ STORE AS BINARY XML
 XMLSCHEMA "proveedores.xsd"
 ELEMENT "proveedores";
 /
------------------
---XML Alberto
-----------------
-
-
-begin
-    dbms_xmlschema.registerschema(schemaurl=>'Incidencias.xsd', 
-    schemadoc=> '<?xml version="1.0" encoding="UTF-8"?> 
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
-<xs:element name="incidencias" type="Incidencia">
-    <xs:key name= "ID">
-        <xs:selector xpath= "xs:Incidencia" />
-		<xs:field xpath="xs:IDIncidencia"/> 
-
-    </xs:key>
-</xs:element>
-
-<xs:complexType name="Incidencia">
-	<xs:sequence>
-		<xs:element name="IDIncidencia" type="xs:integer" />
-		<xs:element name="causa" type="Causa" minOccurs="1"/>
-		<xs:element name="administrador" type="Administrador" minOccurs="1" maxOccurs="unbounded"/>
-		<xs:element name="impositor" type="Estado" />
-	</xs:sequence>
-</xs:complexType>
-
-<xs:complexType name="Causa">
-		<xs:sequence>
-			<xs:element name="tipo">
-				<xs:simpleType>
-					<xs:restriction base="xs:string">
-						<xs:enumeration value="Pedido"/>
-						<xs:enumeration value="Pago"/>
-					</xs:restriction>
-				</xs:simpleType>
-			</xs:element>
-			<xs:element name="Descripcion" type="xs:string"/>
-			<xs:element name="Fecha" type="xs:string"/>
-		</xs:sequence>
-</xs:complexType>
-
-<xs:complexType name="Administrador">
-	<xs:sequence>
-        <xs:element name="Nombre" type="xs:string"/>
-            <xs:element name="DNI">
-                <xs:simpleType>
-                    <xs:restriction base="xs:string">
-						<xs:length value="9"/>
-                    </xs:restriction>
-                </xs:simpleType>
-            </xs:element>
-        <xs:element name="NumeroSS" type="xs:string"/>
-	</xs:sequence>
-</xs:complexType>
-
-<xs:complexType name="Estado">
-	<xs:sequence>
-		<xs:element name="Estado">
-			<xs:simpleType>
-				<xs:restriction base="xs:string">
-					<xs:enumeration value="Iniciada"/>
-					<xs:enumeration value="En proceso"/>
-					<xs:enumeration value="Resuelto_Aceptado"/>
-					<xs:enumeration value="Resuelto_Rechazado"/>
-					<xs:enumeration value="Cancelado"/>
-				</xs:restriction>
-			</xs:simpleType>
-		</xs:element>
-	</xs:sequence>
-	
-	
-</xs:complexType>
-
-</xs:schema>',
-local=> true, gentypes => false, genbean=> false, gentables=> false, force => false, 
-options => dbms_xmlschema.register_binaryxml, owner=> user);
-
-commit;
-
-end;
-
-CREATE TABLE Incidencias_tab (ID NUMBER, DATOS XMLTYPE)
-  XMLTYPE COLUMN DATOS STORE AS BINARY XML
-  XMLSCHEMA "Incidencias.xsd" ELEMENT "incidencias"
-
-
-
-
-
-
 
 
 
@@ -221,6 +131,187 @@ from provrest p where p.proveedor.extract('/proveedores/proveedor/ciudad/text()'
 
 
 
+
+----------------
+--XML Alberto
+----------------
+
+begin
+    dbms_xmlschema.registerschema(schemaurl=>'Incidencias.xsd', 
+    schemadoc=> '<?xml version="1.0" encoding="UTF-8"?> 
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:element name="incidencia" type="Incidencia">
+    <xs:key name= "ID">
+        <xs:selector xpath= "xs:Incidencia" />
+		<xs:field xpath="xs:IDIncidencia"/> 
+    </xs:key>
+</xs:element>
+
+<xs:complexType name="Incidencia">
+	<xs:sequence>
+		<xs:element name="IDIncidencia" type="xs:integer" />
+		<xs:element name="causa" type="Causa" minOccurs="1"/>
+		<xs:element name="administrador" type="Administrador" minOccurs="1" maxOccurs="unbounded"/>
+		<xs:element name="estado" type="Estado" />
+	</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="Causa">
+		<xs:sequence>
+			<xs:element name="tipo">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="Pedido"/>
+						<xs:enumeration value="Pago"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="descripcion" type="xs:string"/>
+			<xs:element name="fecha" type="xs:string"/>
+		</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="Administrador">
+	<xs:sequence>
+        <xs:element name="nombre" type="xs:string"/>
+            <xs:element name="DNI">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+						<xs:length value="9"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+        <xs:element name="numeroSS" type="xs:string"/>
+	</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="Estado">
+	<xs:sequence>
+		<xs:element name="estado_actual">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="Iniciada"/>
+					<xs:enumeration value="En proceso"/>
+					<xs:enumeration value="Resuelto_Aceptado"/>
+					<xs:enumeration value="Resuelto_Rechazado"/>
+					<xs:enumeration value="Cancelado"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:element>
+        <xs:element name="ultima_modificacion" type="xs:string"/>
+	</xs:sequence>
+	
+	
+</xs:complexType>
+
+</xs:schema>',
+local=> true, gentypes => false, genbean=> false, gentables=> false, force => false, 
+options => dbms_xmlschema.register_binaryxml, owner=> user);
+
+commit;
+
+end;
+
+CREATE TABLE Incidencias_tab (ID NUMBER, DATOS XMLTYPE)
+  XMLTYPE COLUMN DATOS STORE AS BINARY XML
+  XMLSCHEMA "Incidencias.xsd" ELEMENT "incidencia"
+
+
+
+
+
+-------------------------------
+-- INSERT XML
+-------------------------------
+
+insert into INCIDENCIAS_TAB values (1, '<?xml version="1.0" encoding="UTF-8"?>
+<incidencia>
+    <IDIncidencia>1</IDIncidencia>
+	<causa>
+        <tipo>Pedido</tipo>
+		<descripcion>Falta varias partes del pedido</descripcion>
+		<fecha>12/09/2021</fecha>
+	</causa>
+
+	<administrador>
+		<nombre>Perico Martinez</nombre>
+		<DNI>29457381G</DNI>
+		<numeroSS>134345343</numeroSS>
+	</administrador>
+
+	<estado>
+		<estado_actual>En proceso</estado_actual>
+        <ultima_modificacion>16/09/2021</ultima_modificacion>
+	</estado>			
+</incidencia>');
+/	
+        
+insert into INCIDENCIAS_TAB values (2, '<?xml version="1.0" encoding="UTF-8"?>
+<incidencia>
+    <IDIncidencia>2</IDIncidencia>
+	<causa>
+        <tipo>Pago</tipo>
+		<descripcion>No se ha devuelto todo el dinero</descripcion>
+		<fecha>13/03/2021</fecha>
+	</causa>
+
+	<administrador>
+		<nombre>Perico Martinez</nombre>
+		<DNI>29457381G</DNI>
+		<numeroSS>134345343</numeroSS>
+	</administrador>
+
+	<estado>
+		<estado_actual>Resuelto_Aceptado</estado_actual>
+        <ultima_modificacion>14/05/2021</ultima_modificacion>
+	</estado>			
+</incidencia>');
+/		
+        
+insert into INCIDENCIAS_TAB values (3, '<?xml version="1.0" encoding="UTF-8"?>
+<incidencia>
+    <IDIncidencia>3</IDIncidencia>
+	<causa>
+        <tipo>Pedido</tipo>
+		<descripcion>La hamburguesa no contenia bacon</descripcion>
+		<fecha>31/1/2021</fecha>
+	</causa>
+
+	<administrador>
+		<nombre>Adolfo Cabrales</nombre>
+		<DNI>31343312E</DNI>
+		<numeroSS>42422452</numeroSS>
+	</administrador>
+
+	<estado>
+		<estado_actual>Resuelto_Aceptado</estado_actual>
+        <ultima_modificacion>13/05/2021</ultima_modificacion>
+	</estado>			
+</incidencia>');
+/		
+        
+insert into INCIDENCIAS_TAB values (4, '<?xml version="1.0" encoding="UTF-8"?>
+<incidencia>
+    <IDIncidencia>4</IDIncidencia>
+	<causa>
+        <tipo>Pago</tipo>
+		<descripcion>Pago realizado, pero el pedido se ha cancelado</descripcion>
+		<fecha>13/05/2021</fecha>
+	</causa>
+
+	<administrador>
+		<nombre>Sandra Garrido</nombre>
+		<DNI>13424423K</DNI>
+		<numeroSS>314234211</numeroSS>
+	</administrador>
+
+	<estado>
+		<estado_actual>Cancelado</estado_actual>
+        <ultima_modificacion>13/06/2021</ultima_modificacion>
+	</estado>			
+</incidencia>');
+/		
+COMMIT;
 
 
 
