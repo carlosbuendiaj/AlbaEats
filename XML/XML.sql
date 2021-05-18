@@ -42,6 +42,96 @@ XMLTYPE COLUMN proveedor
 STORE AS BINARY XML
 XMLSCHEMA "proveedores.xsd"
 ELEMENT "proveedores";
+/
+-----------------
+--XML Alberto
+----------------
+
+
+begin
+    dbms_xmlschema.registerschema(schemaurl=>'Incidencias.xsd', 
+    schemadoc=> '<?xml version="1.0" encoding="UTF-8"?> 
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:element name="incidencias" type="Incidencia">
+    <xs:key name= "ID">
+        <xs:selector xpath= "xs:Incidencia" />
+		<xs:field xpath="xs:IDIncidencia"/> 
+
+    </xs:key>
+</xs:element>
+
+<xs:complexType name="Incidencia">
+	<xs:sequence>
+		<xs:element name="IDIncidencia" type="xs:integer" />
+		<xs:element name="causa" type="Causa" minOccurs="1"/>
+		<xs:element name="administrador" type="Administrador" minOccurs="1" maxOccurs="unbounded"/>
+		<xs:element name="impositor" type="Estado" />
+	</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="Causa">
+		<xs:sequence>
+			<xs:element name="tipo">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="Pedido"/>
+						<xs:enumeration value="Pago"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:element>
+			<xs:element name="Descripcion" type="xs:string"/>
+			<xs:element name="Fecha" type="xs:string"/>
+		</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="Administrador">
+	<xs:sequence>
+        <xs:element name="Nombre" type="xs:string"/>
+            <xs:element name="DNI">
+                <xs:simpleType>
+                    <xs:restriction base="xs:string">
+						<xs:length value="9"/>
+                    </xs:restriction>
+                </xs:simpleType>
+            </xs:element>
+        <xs:element name="NumeroSS" type="xs:string"/>
+	</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="Estado">
+	<xs:sequence>
+		<xs:element name="Estado">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="Iniciada"/>
+					<xs:enumeration value="En proceso"/>
+					<xs:enumeration value="Resuelto_Aceptado"/>
+					<xs:enumeration value="Resuelto_Rechazado"/>
+					<xs:enumeration value="Cancelado"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:element>
+	</xs:sequence>
+	
+	
+</xs:complexType>
+
+</xs:schema>',
+local=> true, gentypes => false, genbean=> false, gentables=> false, force => false, 
+options => dbms_xmlschema.register_binaryxml, owner=> user);
+
+commit;
+
+end;
+
+
+
+
+
+
+
+
+
 
 
 ----------------------------------
