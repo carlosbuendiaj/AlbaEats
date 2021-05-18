@@ -124,7 +124,9 @@ commit;
 
 end;
 
-
+CREATE TABLE Incidencias_tab (ID NUMBER, DATOS XMLTYPE)
+  XMLTYPE COLUMN DATOS STORE AS BINARY XML
+  XMLSCHEMA "Incidencias.xsd" ELEMENT "incidencias"
 
 
 
