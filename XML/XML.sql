@@ -314,6 +314,32 @@ COMMIT;
 
 
 
+--Consultas
+
+
+  CREATE OR REPLACE VIEW INCIDENCIA_NECESITA_REVISIO AS 
+  SELECT id as id,
+    EXTRACTVALUE(datos, '/incidencia/estado/estado_actual') as estado_actual,
+    XMLQuery(
+    'for $i in /incidencia
+    let $date := xs:dateTime($i/estado/ultima_modificacion)
+    let $status := $i/estado/estado_actual
+    where  $date < xs:dateTime("2024-09-13")
+    return 
+        <Revision>
+            <Estado>{$status}</Estado>
+            <Ultima_modificacion>{$date}</Ultima_modificacion>
+            <Necesita_Revision>
+               {
+               if ($status = "Iniciada" or $status = "En proceso" ) 
+                then "true" 
+                else "false"
+               }
+            </Necesita_Revision>
+        </Revision>' PASSING datos RETURNING CONTENT) "Big_warehouses"
+   FROM incidencias_tab
+   WHERE extract(datos, '/incidencia/causa/tipo/text()').getStringVal() = 'Pedido'
+   ;
 
 
 
