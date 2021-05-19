@@ -135,7 +135,6 @@ from provrest p where p.proveedor.extract('/proveedores/proveedor/ciudad/text()'
 ----------------
 --XML Alberto
 ----------------
-
 begin
     dbms_xmlschema.registerschema(schemaurl=>'Incidencias.xsd', 
     schemadoc=> '<?xml version="1.0" encoding="UTF-8"?> 
@@ -167,7 +166,7 @@ begin
 				</xs:simpleType>
 			</xs:element>
 			<xs:element name="descripcion" type="xs:string"/>
-			<xs:element name="fecha" type="xs:string"/>
+			<xs:element name="fecha" type="xs:date"/>
 		</xs:sequence>
 </xs:complexType>
 
@@ -198,7 +197,7 @@ begin
 				</xs:restriction>
 			</xs:simpleType>
 		</xs:element>
-        <xs:element name="ultima_modificacion" type="xs:string"/>
+        <xs:element name="ultima_modificacion" type="xs:date"/>
 	</xs:sequence>
 	
 	
@@ -230,7 +229,7 @@ insert into INCIDENCIAS_TAB values (1, '<?xml version="1.0" encoding="UTF-8"?>
 	<causa>
         <tipo>Pedido</tipo>
 		<descripcion>Falta varias partes del pedido</descripcion>
-		<fecha>12/09/2021</fecha>
+		<fecha>2021-09-12</fecha>
 	</causa>
 
 	<administrador>
@@ -241,7 +240,7 @@ insert into INCIDENCIAS_TAB values (1, '<?xml version="1.0" encoding="UTF-8"?>
 
 	<estado>
 		<estado_actual>En proceso</estado_actual>
-        <ultima_modificacion>16/09/2021</ultima_modificacion>
+        <ultima_modificacion>2021-09-16</ultima_modificacion>
 	</estado>			
 </incidencia>');
 /	
@@ -252,7 +251,7 @@ insert into INCIDENCIAS_TAB values (2, '<?xml version="1.0" encoding="UTF-8"?>
 	<causa>
         <tipo>Pago</tipo>
 		<descripcion>No se ha devuelto todo el dinero</descripcion>
-		<fecha>13/03/2021</fecha>
+		<fecha>2021-08-14</fecha>
 	</causa>
 
 	<administrador>
@@ -263,7 +262,7 @@ insert into INCIDENCIAS_TAB values (2, '<?xml version="1.0" encoding="UTF-8"?>
 
 	<estado>
 		<estado_actual>Resuelto_Aceptado</estado_actual>
-        <ultima_modificacion>14/05/2021</ultima_modificacion>
+        <ultima_modificacion>2021-08-17</ultima_modificacion>
 	</estado>			
 </incidencia>');
 /		
@@ -274,7 +273,7 @@ insert into INCIDENCIAS_TAB values (3, '<?xml version="1.0" encoding="UTF-8"?>
 	<causa>
         <tipo>Pedido</tipo>
 		<descripcion>La hamburguesa no contenia bacon</descripcion>
-		<fecha>31/1/2021</fecha>
+		<fecha>2021-05-16</fecha>
 	</causa>
 
 	<administrador>
@@ -285,7 +284,7 @@ insert into INCIDENCIAS_TAB values (3, '<?xml version="1.0" encoding="UTF-8"?>
 
 	<estado>
 		<estado_actual>Resuelto_Aceptado</estado_actual>
-        <ultima_modificacion>13/05/2021</ultima_modificacion>
+        <ultima_modificacion>2021-05-12</ultima_modificacion>
 	</estado>			
 </incidencia>');
 /		
@@ -296,7 +295,7 @@ insert into INCIDENCIAS_TAB values (4, '<?xml version="1.0" encoding="UTF-8"?>
 	<causa>
         <tipo>Pago</tipo>
 		<descripcion>Pago realizado, pero el pedido se ha cancelado</descripcion>
-		<fecha>13/05/2021</fecha>
+		<fecha>2021-06-03</fecha>
 	</causa>
 
 	<administrador>
@@ -307,7 +306,7 @@ insert into INCIDENCIAS_TAB values (4, '<?xml version="1.0" encoding="UTF-8"?>
 
 	<estado>
 		<estado_actual>Cancelado</estado_actual>
-        <ultima_modificacion>13/06/2021</ultima_modificacion>
+        <ultima_modificacion>2021-06-10</ultima_modificacion>
 	</estado>			
 </incidencia>');
 /		
