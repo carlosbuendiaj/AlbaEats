@@ -761,3 +761,13 @@ insert into TALLER_TAB values (6,'<?xml version="1.0" encoding="UTF-8"?>
         </admin>
 </taller>');
 /
+
+
+--Consultas
+
+--Obtener el nombre de los administradores de los talleres ReparaCar
+create or replace view Talleres_Reparacar as
+select Id, t.taller.extract('/Taller/taller/admin/nombre/text()').getStringVal()
+from taller_tab t
+where t.taller.extract('/Taller/taller/Nombre/text()').getStringVal() = 'ReparaCar';
+/
