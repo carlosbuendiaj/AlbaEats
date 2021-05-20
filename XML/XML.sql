@@ -117,6 +117,7 @@ XDB.XMLINDEX PARAMETERS ('PATHS (INCLUDE (/proveedores/proveedor/dni))');/
 
 --Consultas
 --Proveedores pertenecientes a Cuenca y Albacete
+create or replace view proveedoresca as
 select id, p.proveedor.extract('/proveedores/proveedor/nombre/text()').getStringVal() 
 from provrest p where p.proveedor.extract('/proveedores/proveedor/ciudad/text()').getStringVal() = 'Cuenca' 
 or p.proveedor.extract('/proveedores/proveedor/ciudad/text()').getStringVal() = 'Albacete';/
@@ -276,12 +277,14 @@ XDB.XMLINDEX PARAMETERS ('PATHS (INCLUDE (/productos/producto/idprod))');/
 --Consultas
 
 --Mostrar los productos que sean del tipo 'Carne' y se compré más de 10 unidades
+create or replace view prodcarne as
 select id, p.producto.extract('/productos/producto/nombre/text()').getStringVal() 
 from product p where p.producto.extract('/productos/producto/tipo_prod/text()').getStringVal() = 'Carne' 
 and  p.producto.extract('/productos/producto/cantidad/text()').getStringVal() > 10;/
 
 
 --Obtener el total de tipos de producto que tengan una cantidad mayor o igual a 5 y menor o igual a 15.
+create or replace view prodtotales as
 select count(*) as total_productos, p.producto.extract('/productos/producto/tipo_prod/text()').getStringVal() as tipo_producto
 from product p where p.producto.extract('/productos/producto/cantidad/text()').getStringVal() <= 15
 and p.producto.extract('/productos/producto/cantidad/text()').getStringVal() >= 5
