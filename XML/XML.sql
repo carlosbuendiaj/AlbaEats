@@ -286,13 +286,17 @@ create or replace view prodtotales as
 select count(*) as total_productos, p.producto.extract('/productos/producto/tipo_prod/text()').getStringVal() as tipo_producto
 from product p where p.producto.extract('/productos/producto/cantidad/text()').getStringVal() <= 15
 and p.producto.extract('/productos/producto/cantidad/text()').getStringVal() >= 5
-group by p.producto.extract('/productos/producto/tipo_prod/text()').getStringVal();/
+group by p.producto.extract('/productos/producto/tipo_prod/text()').getStringVal();
+/
 
 
 
 ----------------
 --XML Alberto
 ----------------
+DROP TABLE Incidencias_tab FORCE;
+/
+
 begin
     dbms_xmlschema.registerschema(schemaurl=>'Incidencias.xsd', 
     schemadoc=> '<?xml version="1.0" encoding="UTF-8"?> 
@@ -377,10 +381,11 @@ options => dbms_xmlschema.register_binaryxml, owner=> user);
 commit;
 
 end;
-
+/
 CREATE TABLE Incidencias_tab (ID NUMBER, DATOS XMLTYPE)
   XMLTYPE COLUMN DATOS STORE AS BINARY XML
-  XMLSCHEMA "Incidencias.xsd" ELEMENT "incidencia"
+  XMLSCHEMA "Incidencias.xsd" ELEMENT "incidencia";
+/
 
 
 insert into INCIDENCIAS_TAB values (1, '<?xml version="1.0" encoding="UTF-8"?>
@@ -445,10 +450,7 @@ insert into INCIDENCIAS_TAB values (2, '<?xml version="1.0" encoding="UTF-8"?>
 	</comentario>	
 </incidencia>');
 /		
-        
-
-
-    i   
+         
         
 insert into INCIDENCIAS_TAB values (3, '<?xml version="1.0" encoding="UTF-8"?>
 <incidencia>
@@ -510,14 +512,42 @@ insert into INCIDENCIAS_TAB values (4, '<?xml version="1.0" encoding="UTF-8"?>
         <fecha>2021-09-16</fecha>
 	</comentario>	
 </incidencia>');
-/		
+/	
+
 COMMIT;
+
+/
 
 
 
 --Consultas
+
+UPDATE INCIDENCIAS_TAB 
+SET datos = INSERTCHILDXML(datos, '/incidencia', 'comentario', xmltype('   
+    <comentario>
+		<texto>Se ha iniciado el proceso de pago</texto>
+        <fecha>2021-08-16</fecha>
+	</comentario>	
+    '))
+WHERE id = 4;
 /
-  CREATE OR REPLACE VIEW INCIDENCIA_NECESITA_REVISIO AS 
+
+CREATE VIEW vista_datos_pedido_incidencia_pago AS
+Select p.id_pedido, p.precio, p.distancia, p.pagado,
+extract(datos,'//causa/tipo/text()').getStringVal() AS "Tipo Incidencia",
+extract(datos,'//causa/descripcion/text()').getStringVal()AS "Descripcion Incidencia",
+extract(datos,'//administrador/nombre/text()').getStringVal() AS "Nombre administrador",
+extract(datos,'//administrador/DNI/text()').getStringVal()AS "DNI Administrador",
+extract(datos,'//estado/estado_actual/text()').getStringVal()AS "Estado acual incidencia"
+from PEDIDO_TAB p , INCIDENCIAS_TAB i
+Where p.id_pedido = extract(i.datos,'//IDPedido/text()').getStringVal()
+and extract(datos, '/incidencia/causa/tipo/text()').getStringVal() = 'Pago';
+
+/
+  
+
+								       
+CREATE OR REPLACE VIEW INCIDENCIA_NECESITA_REVISIO AS 
   SELECT id as id,
     EXTRACTVALUE(datos, '/incidencia/estado/estado_actual') as estado_actual,
     
@@ -542,15 +572,7 @@ COMMIT;
    WHERE extract(datos, '/incidencia/causa/tipo/text()').getStringVal() = 'Pedido'
    ;
 /
-UPDATE INCIDENCIAS_TAB 
-SET datos = INSERTCHILDXML(datos, '/incidencia', 'comentario', xmltype('   
-    <comentario>
-		<texto>Se ha iniciado el proceso de pago</texto>
-        <fecha>2021-08-16</fecha>
-	</comentario>	
-    '))
-WHERE id = 4;
-/
+								       
 CREATE VIEW GET_STATS_FROM_INCIDENCIAS AS
 SELECT 
     COUNT ( 
@@ -576,18 +598,7 @@ FROM INCIDENCIAS_TAB  i ;
 								       
 								       
 								       
-CREATE VIEW vista_datos_pedido_incidencia_pago AS
-Select p.id_pedido, p.precio, p.distancia, p.pagado,
-extract(datos,'//causa/tipo/text()').getStringVal() AS "Tipo Incidencia",
-extract(datos,'//causa/descripcion/text()').getStringVal()AS "Descripcion Incidencia",
-extract(datos,'//administrador/nombre/text()').getStringVal() AS "Nombre administrador",
-extract(datos,'//administrador/DNI/text()').getStringVal()AS "DNI Administrador",
-extract(datos,'//estado/estado_actual/text()').getStringVal()AS "Estado acual incidencia"
-from PEDIDO_TAB p , INCIDENCIAS_TAB i
-Where p.id_pedido = extract(i.datos,'//IDPedido/text()').getStringVal()
-and extract(datos, '/incidencia/causa/tipo/text()').getStringVal() = 'Pago'
 
-/
 
 
 
@@ -650,7 +661,8 @@ end;
 
 CREATE TABLE taller_tab (Id NUMBER, taller XMLTYPE)
   XMLTYPE COLUMN taller STORE AS BINARY XML
-  XMLSCHEMA "taller.xsd" ELEMENT "taller"
+  XMLSCHEMA "taller.xsd" ELEMENT "taller";
+/
 
 
 
