@@ -515,7 +515,7 @@ COMMIT;
 
 
 --Consultas
-
+/
   CREATE OR REPLACE VIEW INCIDENCIA_NECESITA_REVISIO AS 
   SELECT id as id,
     EXTRACTVALUE(datos, '/incidencia/estado/estado_actual') as estado_actual,
@@ -540,7 +540,7 @@ COMMIT;
    FROM incidencias_tab
    WHERE extract(datos, '/incidencia/causa/tipo/text()').getStringVal() = 'Pedido'
    ;
-
+/
 UPDATE INCIDENCIAS_TAB 
 SET datos = INSERTCHILDXML(datos, '/incidencia', 'comentario', xmltype('   
     <comentario>
@@ -549,7 +549,29 @@ SET datos = INSERTCHILDXML(datos, '/incidencia', 'comentario', xmltype('
 	</comentario>	
     '))
 WHERE id = 4;
+/
+CREATE VIEW GET_STATS_FROM_INCIDENCIAS AS
+SELECT 
+    COUNT ( 
+        CASE WHEN 
+            extract(datos,'//causa/tipo/text()').getStringVal() = 'Pago'
+        THEN 1 ELSE null END
+    ) "Tipo Pago", 
 
+    SUM(extract(datos,'count(/incidencia/causa[tipo="Pago"]/../comentario)').getStringVal()) 
+    AS "Num Comentarios Pago",
+    
+    COUNT (
+        CASE WHEN 
+            extract(datos,'//causa/tipo/text()').getStringVal() = 'Pedido'   
+        THEN 1 ELSE null END
+    ) "Tipo Pedido",
+    
+    SUM(extract(datos,'count(/incidencia/causa[tipo="Pedido"]/../comentario)').getStringVal()) 
+    AS "Num Comentarios Pedido"
+FROM INCIDENCIAS_TAB  i ; 								       
+/								       
+								       
 								       
 								       
 								       
@@ -564,7 +586,7 @@ from PEDIDO_TAB p , INCIDENCIAS_TAB i
 Where p.id_pedido = extract(i.datos,'//IDPedido/text()').getStringVal()
 and extract(datos, '/incidencia/causa/tipo/text()').getStringVal() = 'Pago'
 
-
+/
 
 
 
