@@ -1,9 +1,12 @@
 -----------------
---XML alfonso
+--XML Alfonso
 ----------------
 
---TABLA PROVEEDORES
 
+drop table provrest force;/
+drop table product force;/
+
+--TABLA PROVEEDORES
 
 begin
 DBMS_XMLSCHEMA.REGISTERSCHEMA(SCHEMAURL=>'proveedores.xsd',
@@ -41,15 +44,10 @@ CREATE TABLE DDBBLOCAL.PROVREST(id number, proveedor xmltype)
 XMLTYPE COLUMN proveedor
 STORE AS BINARY XML
 XMLSCHEMA "proveedores.xsd"
-ELEMENT "proveedores";
-/
+ELEMENT "proveedores";/
 
 
-
-----------------------------------
--- INSERT XML
--------------------------------
-
+--INSERT Proveedores
 
 insert into ddbblocal.provrest values(1, 
 '<?xml version="1.0"?>
@@ -63,7 +61,7 @@ insert into ddbblocal.provrest values(1,
             <telefono>777777888</telefono>
             <correo>pfg@gmail.es</correo>
     </proveedor>
-    </proveedores>');
+    </proveedores>');/
 
 insert into ddbblocal.provrest values(2, 
 '<?xml version="1.0"?>
@@ -77,7 +75,7 @@ insert into ddbblocal.provrest values(2,
             <telefono>111222333</telefono>
             <correo>arl@gmail.es</correo>
     </proveedor>
-    </proveedores>');
+    </proveedores>');/
 	
 insert into ddbblocal.provrest values(3, 
 '<?xml version="1.0"?>
@@ -91,7 +89,7 @@ insert into ddbblocal.provrest values(3,
             <telefono>789406123</telefono>
             <correo>mmm@gmail.es</correo>
     </proveedor>
-    </proveedores>');
+    </proveedores>');/
 
 
 insert into ddbblocal.provrest values(4, 
@@ -106,29 +104,187 @@ insert into ddbblocal.provrest values(4,
             <telefono>453297813</telefono>
             <correo>jgm@gmail.es</correo>
     </proveedor>
-    </proveedores>');
+    </proveedores>');/
 	
-	
+
 --INDICES	
 create index idx_proveedor ON ddbblocal.provrest(proveedor) INDEXTYPE IS
-XDB.XMLINDEX PARAMETERS ('PATHS (INCLUDE (/proveedores/proveedor/dni))');
-
-
---Mostrar valor
-select extract(proveedor, '/proveedores/proveedor/dni/text()') 
-from provrest p where id = 4;
-
-select
-id, r.proveedor.extract('/proveedores/proveedor').getStringVal() 
-from provrest r where id = 2;
+XDB.XMLINDEX PARAMETERS ('PATHS (INCLUDE (/proveedores/proveedor/dni))');/
 
 
 
 --Consultas
-
+--Proveedores pertenecientes a Cuenca y Albacete
 select id, p.proveedor.extract('/proveedores/proveedor/nombre/text()').getStringVal() 
-from provrest p where p.proveedor.extract('/proveedores/proveedor/ciudad/text()').getStringVal() = 'Cuenca';
+from provrest p where p.proveedor.extract('/proveedores/proveedor/ciudad/text()').getStringVal() = 'Cuenca' 
+or p.proveedor.extract('/proveedores/proveedor/ciudad/text()').getStringVal() = 'Albacete';/
 
+
+------------------------
+--PRODUCTOS
+------------------------
+
+begin
+DBMS_XMLSCHEMA.REGISTERSCHEMA(SCHEMAURL=>'productosbase.xsd',
+SCHEMADOC=>'<?xml version="1.0"
+encoding="utf-8"?>
+    <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+     <xs:element name="productos">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="producto">
+                     <xs:complexType>
+                        <xs:sequence>
+							 <xs:element name="idprod" type="xs:string"/>
+                             <xs:element name="nombre" type="xs:string"/>
+                             <xs:element name="descripcion" type="xs:string"/>
+							 <xs:element name="precio_unit" type="xs:decimal"/>
+                             <xs:element name="tipo_prod">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string">
+                                    <xs:enumeration value="Carne"/>
+                                    <xs:enumeration value="Pescado"/>
+                                    <xs:enumeration value="Verduras"/>
+                                    <xs:enumeration value="Lacteos"/>
+									<xs:enumeration value="Cereales"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                             </xs:element>
+                             <xs:element name="peso" type="xs:decimal"/>
+                             <xs:element name="cantidad" default="0">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:unsignedByte">
+                                    <xs:minInclusive value="0"/>
+                                    <xs:maxInclusive value="100"/>
+                                    </xs:restriction>
+                                </xs:simpleType>
+                            </xs:element>                           
+                        </xs:sequence>
+                        <xs:attribute name="idp" type="xs:integer" use="required"/>
+                     </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+         </xs:complexType>
+     </xs:element>
+</xs:schema>', LOCAL=>true, GENTYPES=>false, GENBEAN=>false,
+GENTABLES=>false, FORCE=>false, OPTIONS=>DBMS_XMLSCHEMA.REGISTER_BINARYXML,
+OWNER=>USER);
+commit;
+end;
+/
+
+CREATE TABLE DDBBLOCAL.PRODUCT(id number, producto xmltype)
+XMLTYPE COLUMN producto
+STORE AS BINARY XML
+XMLSCHEMA "productosbase.xsd"
+ELEMENT "productos";
+/
+
+
+--INSERT Productos
+insert into ddbblocal.product values(1, 
+'<?xml version="1.0"?>
+    <productos>
+    <producto idp="1">
+			<idprod>1</idprod>
+            <nombre>Harina</nombre>
+            <descripcion>Harina de trigo de 1 kilo</descripcion>
+			<precio_unit>10.30</precio_unit>
+            <tipo_prod>Cereales</tipo_prod>
+            <peso>1000</peso>
+            <cantidad>4</cantidad>
+    </producto>
+    </productos>');/
+	
+insert into ddbblocal.product values(2, 
+'<?xml version="1.0"?>
+    <productos>
+    <producto idp="2">
+			<idprod>2</idprod>
+            <nombre>Queso</nombre>
+            <descripcion>Queso para pizzas 1kg</descripcion>
+			<precio_unit>14.10</precio_unit>
+            <tipo_prod>Lacteos</tipo_prod>
+            <peso>1000</peso>
+            <cantidad>6</cantidad>
+    </producto>
+    </productos>');	/
+	
+insert into ddbblocal.product values(3, 
+'<?xml version="1.0"?>
+    <productos>
+    <producto idp="3">
+			<idprod>3</idprod>
+            <nombre>Carne picada</nombre>
+            <descripcion>Carne picada de cerdo 10kg</descripcion>
+			<precio_unit>34.57</precio_unit>
+            <tipo_prod>Carne</tipo_prod>
+            <peso>10000</peso>
+            <cantidad>3</cantidad>
+    </producto>
+    </productos>');/
+	
+insert into ddbblocal.product values(4, 
+'<?xml version="1.0"?>
+    <productos>
+    <producto idp="4">
+			<idprod>4</idprod>
+            <nombre>Muslos pollo</nombre>
+            <descripcion>Muslos de pollo 20ud</descripcion>
+			<precio_unit>15.57</precio_unit>
+            <tipo_prod>Carne</tipo_prod>
+            <peso>3450</peso>
+            <cantidad>30</cantidad>
+    </producto>
+    </productos>');/
+	
+insert into ddbblocal.product values(5, 
+'<?xml version="1.0"?>
+    <productos>
+    <producto idp="5">
+			<idprod>5</idprod>
+            <nombre>Salmon fresco</nombre>
+            <descripcion>Salmon fresco 5kg</descripcion>
+			<precio_unit>76.73</precio_unit>
+            <tipo_prod>Pescado</tipo_prod>
+            <peso>5000</peso>
+            <cantidad>10</cantidad>
+    </producto>
+    </productos>');/
+	
+insert into ddbblocal.product values(6, 
+'<?xml version="1.0"?>
+    <productos>
+    <producto idp="6">
+			<idprod>6</idprod>
+            <nombre>Lechuga</nombre>
+            <descripcion>Lechuga romana 5ud</descripcion>
+			<precio_unit>6.73</precio_unit>
+            <tipo_prod>Verduras</tipo_prod>
+            <peso>1353</peso>
+            <cantidad>10</cantidad>
+    </producto>
+    </productos>');/
+
+--INDICES
+
+create index idx_producto ON ddbblocal.product(producto) INDEXTYPE IS
+XDB.XMLINDEX PARAMETERS ('PATHS (INCLUDE (/productos/producto/idprod))');/
+
+
+--Consultas
+
+--Mostrar los productos que sean del tipo 'Carne' y se compré más de 10 unidades
+select id, p.producto.extract('/productos/producto/nombre/text()').getStringVal() 
+from product p where p.producto.extract('/productos/producto/tipo_prod/text()').getStringVal() = 'Carne' 
+and  p.producto.extract('/productos/producto/cantidad/text()').getStringVal() > 10;/
+
+
+--Obtener el total de tipos de producto que tengan una cantidad mayor o igual a 5 y menor o igual a 15.
+select count(*) as total_productos, p.producto.extract('/productos/producto/tipo_prod/text()').getStringVal() as tipo_producto
+from product p where p.producto.extract('/productos/producto/cantidad/text()').getStringVal() <= 15
+and p.producto.extract('/productos/producto/cantidad/text()').getStringVal() >= 5
+group by p.producto.extract('/productos/producto/tipo_prod/text()').getStringVal();/
 
 
 
