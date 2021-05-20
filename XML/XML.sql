@@ -565,3 +565,67 @@ Where p.id_pedido = extract(i.datos,'//IDPedido/text()').getStringVal()
 and extract(datos, '/incidencia/causa/tipo/text()').getStringVal() = 'Pago'
 
 
+
+
+
+----------------
+--XML Carlos
+----------------
+
+DROP table taller_tab force;/
+
+BEGIN
+DBMS_XMLSCHEMA.REGISTERSCHEMA(SCHEMAURL=>'taller.xsd',
+SCHEMADOC=>'<?xml version="1.0" encoding="utf-8"?>
+    <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+        <xs:element name="taller" type="Taller">
+            <xs:key name= "Id">
+                <xs:selector xpath= "xs:Taller" />
+                <xs:field xpath="xs:Id_taller"/> 
+            </xs:key>
+        </xs:element>
+<xs:complexType name="Taller">
+  <xs:sequence>
+    <xs:element name="Id_taller" type="xs:integer"/>
+    <xs:element name="Nombre" type="xs:string"/>
+    <xs:element name="direccion" type="xs:string"/>
+    <xs:element name="CodigoPostal">
+        <xs:simpleType>  
+            <xs:restriction base="xs:positiveInteger">
+                    <xs:totalDigits value="5" />
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="admin" type="administrador" minOccurs="1"/>
+  </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="administrador">
+	<xs:sequence>
+    <xs:element name="Nombre" type="xs:string"/>
+    <xs:element name="Apellidos" type="xs:string"/>
+    <xs:element name="DNI" type="xs:string"/>
+    <xs:element name="ExperienciaLaboral">
+        <xs:simpleType>  
+            <xs:restriction base="xs:positiveInteger">
+                    <xs:totalDigits value="2" />
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    </xs:sequence>
+</xs:complexType>
+
+
+</xs:schema>', LOCAL=>true, GENTYPES=>false, GENBEAN=>false,
+GENTABLES=>false,
+ FORCE=>false, OPTIONS=>DBMS_XMLSCHEMA.REGISTER_BINARYXML,
+OWNER=>USER);
+commit;
+end;
+/
+
+
+CREATE TABLE taller_tab (Id NUMBER, taller XMLTYPE)
+  XMLTYPE COLUMN taller STORE AS BINARY XML
+  XMLSCHEMA "taller.xsd" ELEMENT "taller"
+
