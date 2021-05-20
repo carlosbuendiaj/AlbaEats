@@ -6,7 +6,9 @@
 drop table provrest force;/
 drop table product force;/
 
+********************
 --TABLA PROVEEDORES
+********************
 
 begin
 DBMS_XMLSCHEMA.REGISTERSCHEMA(SCHEMAURL=>'proveedores.xsd',
@@ -120,10 +122,9 @@ from provrest p where p.proveedor.extract('/proveedores/proveedor/ciudad/text()'
 or p.proveedor.extract('/proveedores/proveedor/ciudad/text()').getStringVal() = 'Albacete';/
 
 
-------------------------
+*******************
 --PRODUCTOS
-------------------------
-
+*******************
 begin
 DBMS_XMLSCHEMA.REGISTERSCHEMA(SCHEMAURL=>'productosbase.xsd',
 SCHEMADOC=>'<?xml version="1.0"
