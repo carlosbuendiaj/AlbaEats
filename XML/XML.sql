@@ -306,6 +306,7 @@ begin
 <xs:complexType name="Incidencia">
 	<xs:sequence>
 		<xs:element name="IDIncidencia" type="xs:integer" />
+        <xs:element name="IDPedido" type="xs:integer" />
 		<xs:element name="causa" type="Causa" minOccurs="1"/>
 		<xs:element name="administrador" type="Administrador" minOccurs="1" maxOccurs="unbounded"/>
 		<xs:element name="estado" type="Estado" />
@@ -384,6 +385,7 @@ CREATE TABLE Incidencias_tab (ID NUMBER, DATOS XMLTYPE)
 insert into INCIDENCIAS_TAB values (1, '<?xml version="1.0" encoding="UTF-8"?>
 <incidencia>
     <IDIncidencia>1</IDIncidencia>
+    <IDPedido>1</IDPedido>
 	<causa>
         <tipo>Pedido</tipo>
 		<descripcion>Falta varias partes del pedido</descripcion>
@@ -415,6 +417,7 @@ insert into INCIDENCIAS_TAB values (1, '<?xml version="1.0" encoding="UTF-8"?>
 insert into INCIDENCIAS_TAB values (2, '<?xml version="1.0" encoding="UTF-8"?>
 <incidencia>
     <IDIncidencia>2</IDIncidencia>
+    <IDPedido>2</IDPedido>
 	<causa>
         <tipo>Pago</tipo>
 		<descripcion>No se ha devuelto todo el dinero</descripcion>
@@ -435,15 +438,21 @@ insert into INCIDENCIAS_TAB values (2, '<?xml version="1.0" encoding="UTF-8"?>
 		<texto>Se ha iniciado el proceso de pago</texto>
         <fecha>2021-08-16</fecha>
 	</comentario>	
-    	<comentario>
+    <comentario>
 		<texto>Se ha comprobado que el cliente lleva razon. Se devolvera el dinero restante</texto>
-        	<fecha>2021-09-16</fecha>
+        <fecha>2021-09-16</fecha>
 	</comentario>	
 </incidencia>');
+/		
+        
+
+
+    i   
         
 insert into INCIDENCIAS_TAB values (3, '<?xml version="1.0" encoding="UTF-8"?>
 <incidencia>
     <IDIncidencia>3</IDIncidencia>
+    <IDPedido>3</IDPedido>
 	<causa>
         <tipo>Pedido</tipo>
 		<descripcion>La hamburguesa no contenia bacon</descripcion>
@@ -474,6 +483,7 @@ insert into INCIDENCIAS_TAB values (3, '<?xml version="1.0" encoding="UTF-8"?>
 insert into INCIDENCIAS_TAB values (4, '<?xml version="1.0" encoding="UTF-8"?>
 <incidencia>
     <IDIncidencia>4</IDIncidencia>
+    <IDPedido>4</IDPedido>
 	<causa>
         <tipo>Pago</tipo>
 		<descripcion>Pago realizado, pero el pedido se ha cancelado</descripcion>
@@ -490,7 +500,7 @@ insert into INCIDENCIAS_TAB values (4, '<?xml version="1.0" encoding="UTF-8"?>
 		<estado_actual>Cancelado</estado_actual>
         <ultima_modificacion>2021-06-10</ultima_modificacion>
 	</estado>		
-        <comentario>
+    <comentario>
 		<texto>Se ha iniciado el proceso de pago</texto>
         <fecha>2021-08-16</fecha>
 	</comentario>	
@@ -531,5 +541,27 @@ COMMIT;
    WHERE extract(datos, '/incidencia/causa/tipo/text()').getStringVal() = 'Pedido'
    ;
 
+UPDATE INCIDENCIAS_TAB 
+SET datos = INSERTCHILDXML(datos, '/incidencia', 'comentario', xmltype('   
+    <comentario>
+		<texto>Se ha iniciado el proceso de pago</texto>
+        <fecha>2021-08-16</fecha>
+	</comentario>	
+    '))
+WHERE id = 4;
+
+								       
+								       
+								       
+CREATE VIEW vista_datos_pedido_incidencia_pago AS
+Select p.id_pedido, p.precio, p.distancia, p.pagado,
+extract(datos,'//causa/tipo/text()').getStringVal() AS "Tipo Incidencia",
+extract(datos,'//causa/descripcion/text()').getStringVal()AS "Descripcion Incidencia",
+extract(datos,'//administrador/nombre/text()').getStringVal() AS "Nombre administrador",
+extract(datos,'//administrador/DNI/text()').getStringVal()AS "DNI Administrador",
+extract(datos,'//estado/estado_actual/text()').getStringVal()AS "Estado acual incidencia"
+from PEDIDO_TAB p , INCIDENCIAS_TAB i
+Where p.id_pedido = extract(i.datos,'//IDPedido/text()').getStringVal()
+and extract(datos, '/incidencia/causa/tipo/text()').getStringVal() = 'Pago'
 
 
