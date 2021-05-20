@@ -369,7 +369,7 @@ COMMIT;
                 else "false"
                }
             </Necesita_Revision>
-        </Revision>' PASSING datos RETURNING CONTENT) "Big_warehouses"
+        </Revision>' PASSING datos RETURNING CONTENT) "Necesita_REV"
    FROM incidencias_tab
    WHERE extract(datos, '/incidencia/causa/tipo/text()').getStringVal() = 'Pedido'
    ;
