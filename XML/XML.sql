@@ -652,3 +652,100 @@ CREATE TABLE taller_tab (Id NUMBER, taller XMLTYPE)
   XMLTYPE COLUMN taller STORE AS BINARY XML
   XMLSCHEMA "taller.xsd" ELEMENT "taller"
 
+
+
+insert into TALLER_TAB values (1,'<?xml version="1.0" encoding="UTF-8"?> 
+<taller>
+    <Id_taller>1</Id_taller>
+    <Nombre>Talleres Antonio</Nombre>
+    <direccion>Calle Sanchez 23</direccion>
+    <CodigoPostal>8</CodigoPostal>
+    
+    <admin>
+        <Nombre>John</Nombre>
+        <Apellidos>Garcia Garcia</Apellidos>
+        <DNI>4936672P</DNI>
+        <ExperienciaLaboral>1</ExperienciaLaboral>
+    </admin>
+</taller>');
+/
+
+
+insert into TALLER_TAB values (2,'<?xml version="1.0" encoding="UTF-8"?> 
+<taller>
+    <Id_taller>2</Id_taller>
+    <Nombre>ReparaCar</Nombre>
+    <direccion>Calle Benito 2</direccion>
+    <CodigoPostal>36</CodigoPostal>
+    
+    <admin>
+        <Nombre>Julian</Nombre>
+        <Apellidos>Carro Sanchez</Apellidos>
+        <DNI>4139677P</DNI>
+        <ExperienciaLaboral>12</ExperienciaLaboral>
+    </admin>
+</taller>');
+/
+
+insert into TALLER_TAB values (3,'<?xml version="1.0" encoding="UTF-8"?> 
+<taller>
+    <Id_taller>3</Id_taller>
+    <Nombre>ReparaCar</Nombre>
+    <direccion>Calle Benito 36</direccion>
+    <CodigoPostal>156</CodigoPostal>
+    
+    <admin>
+        <Nombre>Pepe</Nombre>
+        <Apellidos>Carro Sanchez</Apellidos>
+        <DNI>4938676J</DNI>
+        <ExperienciaLaboral>18</ExperienciaLaboral>
+    </admin>
+</taller>');
+/
+
+insert into TALLER_TAB values (4,'<?xml version="1.0" encoding="UTF-8"?> 
+<taller>
+	<Id_taller>4</Id_taller>
+	<Nombre>Talleres Joaquin</Nombre>
+        <direccion>Avenida España 19</direccion>
+        <CodigoPostal>346</CodigoPostal>
+        
+        <admin>
+            <Nombre>Joaquin</Nombre>
+            <Apellidos>Gamez Moro</Apellidos>
+            <DNI>7931677Z</DNI>
+            <ExperienciaLaboral>15</ExperienciaLaboral>
+        </admin>
+</taller>');
+/
+insert into TALLER_TAB values (5,'<?xml version="1.0" encoding="UTF-8"?> 
+<taller>
+        <Id_taller>5</Id_taller>
+        <Nombre>ReparaCar</Nombre>
+        <direccion>Avenida España 37</direccion>
+        <CodigoPostal>1862</CodigoPostal>
+        
+        <admin>
+            <Nombre>Benito</Nombre>
+            <Apellidos>Perez Navarro</Apellidos>
+            <DNI>0811673J</DNI>
+            <ExperienciaLaboral>18</ExperienciaLaboral>
+        </admin>
+</taller>');
+/
+
+insert into TALLER_TAB values (6,'<?xml version="1.0" encoding="UTF-8"?> 
+<taller>
+        <Id_taller>6</Id_taller>
+        <Nombre>Taller Ramon</Nombre>
+        <direccion>Avenida de la Alegria 48</direccion>
+        <CodigoPostal>2369</CodigoPostal>
+        
+        <admin>
+            <Nombre>Ramon</Nombre>
+            <Apellidos>Piernas Sarrion</Apellidos>
+            <DNI>9761671J</DNI>
+            <ExperienciaLaboral>1</ExperienciaLaboral>
+        </admin>
+</taller>');
+/
