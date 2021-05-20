@@ -1302,9 +1302,9 @@ END CREAR_FACTURA;
 drop table provrest force;/
 drop table product force;/
 
-********************
+--********************
 --TABLA PROVEEDORES
-********************
+--********************
 
 begin
 DBMS_XMLSCHEMA.REGISTERSCHEMA(SCHEMAURL=>'proveedores.xsd',
@@ -2059,4 +2059,13 @@ insert into TALLER_TAB values (6,'<?xml version="1.0" encoding="UTF-8"?>
             <ExperienciaLaboral>1</ExperienciaLaboral>
         </admin>
 </taller>');
+/
+
+--consultas Carlos
+
+create or replace view TalleresReparacar as
+select ID, t.taller.extract('/Taller/taller/admin/Nombre/text()').getStringVal()
+from taller_tab t
+where t.taller.extract('/Taller/taller/Nombre/text()').getStringVal() = 'ReparaCar'
+;
 /
