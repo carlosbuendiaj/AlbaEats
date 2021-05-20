@@ -1678,12 +1678,15 @@ commit;
 
 end;
 /
+DROP TABLE  Incidencias_tab FORCE;
 CREATE TABLE Incidencias_tab (ID NUMBER, DATOS XMLTYPE)
   XMLTYPE COLUMN DATOS STORE AS BINARY XML
   XMLSCHEMA "Incidencias.xsd" ELEMENT "incidencia";
 /
 
-
+/
+COMMIT;
+/
 insert into INCIDENCIAS_TAB values (1, '<?xml version="1.0" encoding="UTF-8"?>
 <incidencia>
     <IDIncidencia>1</IDIncidencia>
@@ -1828,7 +1831,7 @@ SET datos = INSERTCHILDXML(datos, '/incidencia', 'comentario', xmltype('
 WHERE id = 4;
 /
 
-CREATE VIEW vista_datos_pedido_incidencia_pago AS
+CREATE OR REPLACE VIEW vista_datos_pedido_incidencia_pago AS
 Select p.id_pedido, p.precio, p.distancia, p.pagado,
 extract(datos,'//causa/tipo/text()').getStringVal() AS "Tipo Incidencia",
 extract(datos,'//causa/descripcion/text()').getStringVal()AS "Descripcion Incidencia",
@@ -1869,7 +1872,7 @@ CREATE OR REPLACE VIEW INCIDENCIA_NECESITA_REVISIO AS
    ;
 /
 								       
-CREATE VIEW GET_STATS_FROM_INCIDENCIAS AS
+CREATE OR REPLACE VIEW GET_STATS_FROM_INCIDENCIAS AS
 SELECT 
     COUNT ( 
         CASE WHEN 
@@ -2057,9 +2060,3 @@ insert into TALLER_TAB values (6,'<?xml version="1.0" encoding="UTF-8"?>
         </admin>
 </taller>');
 /
-     
-     
-     
-     
-     
-     
