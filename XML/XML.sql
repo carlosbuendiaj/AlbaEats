@@ -115,14 +115,6 @@ XDB.XMLINDEX PARAMETERS ('PATHS (INCLUDE (/proveedores/proveedor/dni))');/
 
 
 
---Consultas
---Proveedores pertenecientes a Cuenca y Albacete
-create or replace view proveedoresca as
-select id, p.proveedor.extract('/proveedores/proveedor/nombre/text()').getStringVal() 
-from provrest p where p.proveedor.extract('/proveedores/proveedor/ciudad/text()').getStringVal() = 'Cuenca' 
-or p.proveedor.extract('/proveedores/proveedor/ciudad/text()').getStringVal() = 'Albacete';/
-
-
 *******************
 --PRODUCTOS
 *******************
@@ -275,6 +267,12 @@ XDB.XMLINDEX PARAMETERS ('PATHS (INCLUDE (/productos/producto/idprod))');/
 
 
 --Consultas
+
+--Proveedores pertenecientes a Cuenca y Albacete
+create or replace view proveedoresca as
+select id, p.proveedor.extract('/proveedores/proveedor/nombre/text()').getStringVal() 
+from provrest p where p.proveedor.extract('/proveedores/proveedor/ciudad/text()').getStringVal() = 'Cuenca' 
+or p.proveedor.extract('/proveedores/proveedor/ciudad/text()').getStringVal() = 'Albacete';/
 
 --Mostrar los productos que sean del tipo 'Carne' y se compré más de 10 unidades
 create or replace view prodcarne as
