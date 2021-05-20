@@ -152,6 +152,7 @@ begin
 		<xs:element name="causa" type="Causa" minOccurs="1"/>
 		<xs:element name="administrador" type="Administrador" minOccurs="1" maxOccurs="unbounded"/>
 		<xs:element name="estado" type="Estado" />
+        <xs:element name="comentario" type="Comentario" maxOccurs="unbounded" />
 	</xs:sequence>
 </xs:complexType>
 
@@ -203,6 +204,13 @@ begin
 	
 </xs:complexType>
 
+<xs:complexType name="Comentario">
+		<xs:sequence>
+			<xs:element name="texto" type="xs:string"/>
+			<xs:element name="fecha" type="xs:date"/>
+		</xs:sequence>
+</xs:complexType>
+
 </xs:schema>',
 local=> true, gentypes => false, genbean=> false, gentables=> false, force => false, 
 options => dbms_xmlschema.register_binaryxml, owner=> user);
@@ -215,13 +223,6 @@ CREATE TABLE Incidencias_tab (ID NUMBER, DATOS XMLTYPE)
   XMLTYPE COLUMN DATOS STORE AS BINARY XML
   XMLSCHEMA "Incidencias.xsd" ELEMENT "incidencia"
 
-
-
-
-
--------------------------------
--- INSERT XML
--------------------------------
 
 insert into INCIDENCIAS_TAB values (1, '<?xml version="1.0" encoding="UTF-8"?>
 <incidencia>
@@ -242,6 +243,15 @@ insert into INCIDENCIAS_TAB values (1, '<?xml version="1.0" encoding="UTF-8"?>
 		<estado_actual>En proceso</estado_actual>
         <ultima_modificacion>2021-09-16</ultima_modificacion>
 	</estado>			
+    
+    <comentario>
+		<texto>Se ha iniciado el proceso de pago</texto>
+        <fecha>2021-09-16</fecha>
+	</comentario>	
+    <comentario>
+		<texto>Se necesita mas informacion sobre las partes restante</texto>
+        <fecha>2021-09-16</fecha>
+	</comentario>
 </incidencia>');
 /	
         
@@ -263,9 +273,16 @@ insert into INCIDENCIAS_TAB values (2, '<?xml version="1.0" encoding="UTF-8"?>
 	<estado>
 		<estado_actual>Resuelto_Aceptado</estado_actual>
         <ultima_modificacion>2021-08-17</ultima_modificacion>
-	</estado>			
+	</estado>	
+    <comentario>
+		<texto>Se ha iniciado el proceso de pago</texto>
+        <fecha>2021-08-16</fecha>
+	</comentario>	
+    	<comentario>
+		<texto>Se ha comprobado que el cliente lleva razon. Se devolvera el dinero restante</texto>
+        	<fecha>2021-09-16</fecha>
+	</comentario>	
 </incidencia>');
-/		
         
 insert into INCIDENCIAS_TAB values (3, '<?xml version="1.0" encoding="UTF-8"?>
 <incidencia>
@@ -285,7 +302,15 @@ insert into INCIDENCIAS_TAB values (3, '<?xml version="1.0" encoding="UTF-8"?>
 	<estado>
 		<estado_actual>Resuelto_Aceptado</estado_actual>
         <ultima_modificacion>2021-05-12</ultima_modificacion>
-	</estado>			
+	</estado>		
+    <comentario>
+		<texto>Se ha iniciado el proceso</texto>
+        <fecha>2021-08-16</fecha>
+	</comentario>	
+    <comentario>
+		<texto>Se ha comprobado que el cliente lleva razon. Se le suministrara un cupon</texto>
+        <fecha>2021-09-16</fecha>
+	</comentario>	
 </incidencia>');
 /		
         
@@ -307,7 +332,15 @@ insert into INCIDENCIAS_TAB values (4, '<?xml version="1.0" encoding="UTF-8"?>
 	<estado>
 		<estado_actual>Cancelado</estado_actual>
         <ultima_modificacion>2021-06-10</ultima_modificacion>
-	</estado>			
+	</estado>		
+        <comentario>
+		<texto>Se ha iniciado el proceso de pago</texto>
+        <fecha>2021-08-16</fecha>
+	</comentario>	
+    <comentario>
+		<texto>El cliente ha cancelado la incidencia</texto>
+        <fecha>2021-09-16</fecha>
+	</comentario>	
 </incidencia>');
 /		
 COMMIT;
