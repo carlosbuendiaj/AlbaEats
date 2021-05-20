@@ -1411,9 +1411,9 @@ XDB.XMLINDEX PARAMETERS ('PATHS (INCLUDE (/proveedores/proveedor/dni))');/
 
 
 
-*******************
+--*******************
 --PRODUCTOS
-*******************
+--*******************
 begin
 DBMS_XMLSCHEMA.REGISTERSCHEMA(SCHEMAURL=>'productosbase.xsd',
 SCHEMADOC=>'<?xml version="1.0"
