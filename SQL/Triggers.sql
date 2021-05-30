@@ -156,6 +156,100 @@ BEGIN
     :new.codigo_postal, (SELECT REF(m) FROM METODOPAGO_TAB m WHERE m.idpago = :new.idpago )));
         
 END;
+			 
+			 
+			 
+--Creamos la vista PEDIDOS donde insertaremos los nuevos pedidos
+CREATE OR REPLACE  VIEW PEDIDOS AS ( SELECT * FROM PEDIDO_TAB );
+/
+
+--creamos el trigger comprobar_mismo_restaurante
+create or replace TRIGGER comprobar_mismo_restaurante
+INSTEAD OF INSERT 
+ON NESTED TABLE LPEDIDO OF PEDIDOS
+FOR EACH ROW
+    DECLARE    
+    TYPE NOMBRE_RESTAURANTE IS TABLE OF RESTAURANTE_TAB.nombre%TYPE INDEX BY BINARY_INTEGER;
+    VNOMBRE_RESTAURANTE NOMBRE_RESTAURANTE; 
+
+     product REF PRODUCTO_OBJ;
+     restaurant REF RESTAURANTE_OBJ;
+     nombre RESTAURANTE_TAB.nombre%TYPE;
+
+BEGIN
+
+    --Buscamos y almacenamos el nombre del restaurante de cada producto en todas las lineas de un pedido
+    SELECT distinct deref(rest).nombre bulk collect into VNOMBRE_RESTAURANTE from (
+        SELECT deref(lp.producto).restaurante as rest 
+        FROM PEDIDO_TAB ped, TABLE(LPEDIDO) lp
+        WHERE ped.id_pedido = :PARENT.id_pedido
+    ) restaurant;
+
+    --Si ya hay mas de una restaurante, cancelamos la ejecucion
+    IF VNOMBRE_RESTAURANTE.COUNT >1 THEN
+        RAISE_APPLICATION_ERROR (-20001, 'Error, actualmente, existen productos de diferentes restaurantes en este pedido. Cancalando...' 
+        || VNOMBRE_RESTAURANTE(1) || VNOMBRE_RESTAURANTE(2)  );
+
+    ELSIF VNOMBRE_RESTAURANTE.COUNT = 0 THEN
+        -- Si no hay ningun restaurante, no hay lineas de pedido, por lo que insertamos
+        INSERT INTO TABLE (
+            SELECT p.LPEDIDO FROM PEDIDO_TAB p WHERE id_pedido = :PARENT.id_pedido)
+            VALUES (:NEW.id_lpedido, :NEW.cantidad, :NEW.precio, :NEW.iva, :NEW.descripcion, :NEW.producto ); 
+    ELSE
+        --Obtenemos el restaurante del producto a insertar
+        product := :new.producto;
+        SELECT DEREF(product).restaurante INTO restaurant FROM dual;
+        SELECT DEREF(restaurant).nombre INTO nombre FROM dual;
+
+        -- Si el restaurante coincide con el de anteriores lineas. insertamos
+        IF nombre = VNOMBRE_RESTAURANTE(1) then        
+            INSERT INTO TABLE (
+                SELECT p.LPEDIDO FROM PEDIDO_TAB p WHERE id_pedido = :PARENT.id_pedido)
+                VALUES (:NEW.id_lpedido, :NEW.cantidad, :NEW.precio, :NEW.iva, :NEW.descripcion, :NEW.producto );    
+        --Si no, cancelamos la ejecucion, pues son restaurantes diferentes
+        ELSE RAISE_APPLICATION_ERROR (-20001, 'ERROR, el restaurante del nuevo producto escogido no coincide con el de anteriores productos');
+
+        END IF;
+
+
+    END IF;
+
+
+END;
+/
+
+
+--Creamos un nuevo pedido donde vamos a insertar los productos
+-- SI APARACE UN ERROR, PROBAR A DESACTIVAR/ELIMINAR EL TRIGGER ACTUALIZACION_PRECIO, 
+-- YA QUE EL TRIGGER ESTA INCOMPLETO Y PUEDE DAR ERROR AL INSERTAR UN PEDIDO
+INSERT INTO PEDIDO_TAB VALUES(PEDIDO_OBJ
+(20, 11.30,2.7, TO_DATE('21/07/2021 23:00:00', 'dd/mm/yyyy hh24:mi:ss') ,0,1, 'completado',LPEDIDO_NTABTYP(), (SELECT REF(r) FROM REPARTIDOR_TAB r WHERE r.ID_USUARIO = 6),(SELECT REF(c) FROM CLIENTE_TAB c WHERE c.ID_USUARIO = 2) ));
+/
+
+--Insertamos el primer producto del restaurante Taco Bell.
+INSERT INTO TABLE (SELECT p.LPEDIDO 
+FROM PEDIDOS p WHERE p.ID_PEDIDO =20) VALUES(
+200, 1, 8.3, 12, 'X1', (SELECT REF(pro)FROM PRODUCTO_TAB pro
+WHERE pro.ID_PRODUCTO = 9)
+);
+/
+--Intentamos insertar  un segundo  producto del restaurante Pizzeria Antonio. Obtenemos error y no se realiza la insercion
+
+INSERT INTO TABLE (SELECT p.LPEDIDO 
+FROM PEDIDOS p WHERE p.ID_PEDIDO =20) VALUES(
+201, 1, 8.3, 12, 'X1', (SELECT REF(pro)FROM PRODUCTO_TAB pro
+WHERE pro.ID_PRODUCTO = 1)
+);
+/
+
+--Insertamos otro producto del restaurante Taco Bell. Esta vez si es insertado, ya que un producto de Taco Bell fue insertado antes
+INSERT INTO TABLE (SELECT p.LPEDIDO 
+FROM PEDIDOS p WHERE p.ID_PEDIDO =20) VALUES(
+201, 1, 8.3, 12, 'X1', (SELECT REF(pro)FROM PRODUCTO_TAB pro
+WHERE pro.ID_PRODUCTO = 10)
+);
+
+/
 
 --Carlos
 create or replace TRIGGER ACTUALIZACION_PRECIO
