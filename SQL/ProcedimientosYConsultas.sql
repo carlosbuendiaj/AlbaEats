@@ -182,6 +182,28 @@ BEGIN
      
 END;
 END DESPEDIR_MECANICO;     
+
+--Asocia un mecánico con un vehiculo que no tenga mecánico
+create or replace PROCEDURE ASOCIAR_MECANICO (dnim VARCHAR2) IS
+BEGIN
+DECLARE
+    
+     meca REF MECANICO_OBJ;
+     dnimecan MECANICO_TAB.dni%TYPE;
+     mvehiculo  VEHICULO_TAB.matricula%TYPE;
      
+BEGIN
+    --Buscamos la referencia del mécanco asociado al dni del parámetro
+    SELECT REF(m) INTO meca FROM MECANICO_TAB m WHERE dnim = m.dni;
+
+    --Almacenamos los vehiculos que no tienen mecánico asociado
+    SELECT v.matricula INTO mvehiculo FROM VEHICULO_TAB v WHERE mecanico = null;
+    
+    --Actualizamos la fecha de despido y desvinculamos el vehiculo del mecanico;
+    DBMS_OUTPUT.PUT_LINE('Actualizando vehiculo de la DB');
+    UPDATE VEHICULO_TAB SET mecanico = meca WHERE matricula = mvehiculo;
+     
+END;
+END ASOCIAR_MECANICO;
      
      
