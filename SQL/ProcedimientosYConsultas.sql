@@ -162,7 +162,26 @@ WHEN NO_DATA_FOUND THEN
 END CREAR_FACTURA;
      
      
+-- Función que despedirá a un mecánico
+create or replace PROCEDURE DESPEDIR_MECANICO (dnim VARCHAR2) IS
+BEGIN
+DECLARE
+
+     dnimecan MECANICO_TAB.dni%TYPE;    
+     mvehiculo  VEHICULO_TAB.matricula%TYPE;
      
+BEGIN
+    --Almacenamos los vehiculos con el dni pasado
+    SELECT v.matricula INTO mvehiculo FROM VEHICULO_TAB v WHERE dnim = v.mecanico.dni;
+    
+    --Actualizamos la fecha de despido y desvinculamos el vehiculo del mecanico
+    DBMS_OUTPUT.PUT_LINE('Actualizando fecha de despido del mecanico');
+    UPDATE MECANICO_TAB SET periodo = '09/10/2021' WHERE  dni= dnimecan;
+    DBMS_OUTPUT.PUT_LINE('Actualizando vehiculo del repartido de la DB');
+    UPDATE VEHICULO_TAB SET mecanico = Null WHERE matricula = mvehiculo;
+     
+END;
+END DESPEDIR_MECANICO;     
      
      
      
