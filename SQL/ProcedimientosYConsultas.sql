@@ -167,21 +167,22 @@ create or replace PROCEDURE DESPEDIR_MECANICO (dnim VARCHAR2) IS
 BEGIN
 DECLARE
 
-     dnimecan MECANICO_TAB.dni%TYPE;    
-     mvehiculo  VEHICULO_TAB.matricula%TYPE;
-     
+dnimecan MECANICO_TAB.dni%TYPE;
+mvehiculo  VEHICULO_TAB.matricula%TYPE;
+
 BEGIN
     --Almacenamos los vehiculos con el dni pasado
-    SELECT v.matricula INTO mvehiculo FROM VEHICULO_TAB v WHERE dnim = v.mecanico.dni;
-    
-    --Actualizamos la fecha de despido y desvinculamos el vehiculo del mecanico
-    DBMS_OUTPUT.PUT_LINE('Actualizando fecha de despido del mecanico');
-    UPDATE MECANICO_TAB SET periodo = '09/10/2021' WHERE  dni= dnimecan;
+    SELECT v.matricula INTO mvehiculo FROM VEHICULO_TAB v WHERE v.mecanico.dni = dnim;
+
+    --Desvinculamos el vehiculo del mecanico y eliminamos al mecánico
     DBMS_OUTPUT.PUT_LINE('Actualizando vehiculo del repartido de la DB');
     UPDATE VEHICULO_TAB SET mecanico = Null WHERE matricula = mvehiculo;
-     
+    DBMS_OUTPUT.PUT_LINE('Eliminando al mecanico');
+    DELETE FROM MECANICO_TAB m WHERE m.dni = dnim;
+    DBMS_OUTPUT.PUT_LINE('MECANICO ELIMINADO');
+
 END;
-END DESPEDIR_MECANICO;     
+END DESPEDIR_MECANICO;   
 
 --Asocia un mecánico con un vehiculo que no tenga mecánico
 create or replace PROCEDURE ASOCIAR_MECANICO (dnim VARCHAR2) IS
