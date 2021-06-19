@@ -143,24 +143,21 @@ END DESPEDIR_REPARTIDOR;
                                         
 --Alfonso
 -- Función que creará una nueva factura con los parámetros y relaciones que se le pasen
-CREATE OR REPLACE PROCEDURE CREAR_FACTURA(nid_factura number, ndescripcion varchar2, nimporte number,
+create or replace PROCEDURE CREAR_FACTURA(nid_factura number, ndescripcion varchar2, nimporte number,
 m_dni varchar2, v_matricula varchar2) IS
-FACTURA_N REF FACTURA_OBJ;
+BEGIN
+DECLARE
+
 BEGIN
 
-    SELECT REF(M) INTO MECANICO FROM MECANICO_TAB M
-    WHERE DNI = m_dni;
+    INSERT INTO FACTURA_TAB VALUES ( nid_factura, ndescripcion, nimporte,
+    (SELECT ref(m) FROM MECANICO_TAB m WHERE m.dni = m_dni ),
+    (SELECT ref(v) FROM VEHICULO_TAB v WHERE v.matricula = v_matricula));
 
-    INSERT INTO FACTURA_OBJ VALUES (nid_factura, ndescripcion, nimporte,
-    (SELECT ref(m) FROM MECANICO_TAB m WHERE dni = m_dni ),
-    (SELECT ref(v) FROM VEHICULO_TAB v WHERE matricula = v_matricula));
+     DBMS_OUTPUT.PUT_LINE('Factura creada');
 
-EXCEPTION
-WHEN NO_DATA_FOUND THEN
-    DBMS_OUTPUT.PUT_LINE('ERROR,EL MECANICO O EL VEHICULO NO EXISTEN');
-
+END;
 END CREAR_FACTURA;
-     
      
 -- Función que despedirá a un mecánico
 create or replace PROCEDURE DESPEDIR_MECANICO (dnim VARCHAR2) IS
