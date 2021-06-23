@@ -204,4 +204,35 @@ BEGIN
 END;
 END ASOCIAR_MECANICO;
      
-     
+-- CARLOS
+
+--Funcion que eliminara a un restaurante dado su nombre y su id
+create or replace PROCEDURE EliminarRestaurante(NombreRestaurante VARCHAR2, IdRestaurante NUMBER) IS
+BEGIN
+DECLARE
+NombreRest restaurante_tab.nombre%type;
+IdRest restaurante_tab.id_restaurante%type;
+
+BEGIN
+    --
+    SELECT t.nombre, t.id_restaurante into NombreRest, Idrest FROM RESTAURANTE_TAB t 
+    WHERE t.nombre=NombreRestaurante and t.id_restaurante = IdRestaurante ;
+    DBMS_OUTPUT.PUT_LINE('Eliminando restaurante de la DB');
+    DELETE FROM RESTAURANTE_TAB WHERE nombre=NombreRest and id_restaurante= IdRest;
+END;
+
+END EliminarRestaurante;
+
+--CASO DE PRUEBA:
+
+DECLARE
+NombreRestaurante VARCHAR2(100);
+IdRestaurante NUMBER;
+BEGIN
+NombreRestaurante:='Dominos Pizza';
+IdRestaurante:=2;
+
+EliminarRestaurante(
+NombreRestaurante => NombreRestaurante , IdRestaurante => IdRestaurante
+);
+END;
