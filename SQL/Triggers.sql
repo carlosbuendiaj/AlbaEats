@@ -301,7 +301,7 @@ COMPOUND TRIGGER
 
 /*Asignación automática de ids para los restaurantes nuevos
                          
-EVENTO: Insertar una factura y modificar al id correspondiente automaticamente      
+EVENTO: Insertar un restaurante y modificar al id correspondiente automaticamente      
 
 PRECONDICIÓN: 
 	Alternativa 1. La tabla que contiene los restaurantes debe de estár totalmente vacia.
@@ -353,21 +353,25 @@ create or replace TRIGGER Añadir_restaurante
         (null,'Test','Test123','Madrid', 00037, 666444777, 'Pizzeria', TO_DATE ('20:00:00', 'HH24:MI:SS'), TO_DATE ('23:30:00', 'HH24:MI:SS'), 7);
 
 
-
-
-
-
-/*Asignación automática de ids para las facturas
+/*Asignación automática de ids para las nuevas facturas
                          
-EVENTO: Insertar una factura y modificar al id correspondiente                        
+EVENTO: Insertar una factura y modificar al id correspondiente automaticamente      
+
+PRECONDICIÓN: 
+	Alternativa 1. La tabla que contiene las facturas debe de estár totalmente vacia.
+	Alternativa 2. Modificar el contador incial de la secuencia a la cantidad total de facturas añadidas.
 
 PASOS:
-	1. Insertamos la factura.
-	2. Comprobamos los ids.
-	3. Añadimos el id correspondiente y lo guardamos.
+	1. Insertamos los datos necesarios de la factura mediante el uso de la vista. Es imprescindible poner el primer valor a null. 
+	   (Se puede ver un ejemplo al final de este código)
+	2. El trigger comprueba los ids mediante una secuencia.
+	3. Se añade el valor de la secuencia como id junto con el resto de datos y se guarda en la tabla correspondiente.
 
 */
+-- Creamos una secuencia para añadir los ids
 CREATE SEQUENCE FACTURA_SEQ INCREMENT BY 1 START WITH 1 MINVALUE 1;
+
+DROP SEQUENCE FACTURA_SEQ;
    
   CREATE OR REPLACE TRIGGER Numero_factura
   BEFORE INSERT ON FACTURA_TAB
@@ -375,42 +379,34 @@ CREATE SEQUENCE FACTURA_SEQ INCREMENT BY 1 START WITH 1 MINVALUE 1;
   BEGIN
     :NEW.id_factura := FACTURA_SEQ.NEXTVAL;
   END;
-  
-INSERT INTO FACTURA_TAB VALUES ( FACTURA_OBJ (4,'Cambio aceite',75.26,(SELECT REF(m) FROM MECANICO_TAB m WHERE m.DNI = '56217971E'), (SELECT REF(v) FROM VEHICULO_TAB v WHERE v.matricula = '2222def')));
 
+--Creamos la vista con las facturas para que pueda modificarse por el trigger
 CREATE OR REPLACE VIEW FACTURAS AS ( SELECT * FROM FACTURA_TAB );
 
+DROP VIEW FACTURAS;
+
+--Trigger encargado de actualizar los ids de las facturas
 create or replace TRIGGER Añadir_factura
   INSTEAD OF INSERT ON FACTURAS
   FOR EACH ROW
   
   DECLARE
-    TYPE Facturaid IS TABLE OF FACTURAS.id_factura%TYPE;
-    vfacturaid Facturaid;
-    
-    countid NUMBER;
-    V_idfact FACTURAS.id_factura%type;
-    auxfact number;
-    
+    V_NF number;
+      
   BEGIN
 
-    SELECT f.id_factura BULK COLLECT INTO vfacturaid
-    FROM FACTURAS f
-    WHERE f.id_factura IS NOT NULL;
-  
-   select count(id_factura) into countid from facturas;
-   select id_factura into V_idfact from facturas;
-  
-   FOR j IN 1..countid LOOP
-        IF :new.id_factura = vfacturaid(j) THEN
-            auxfact := FACTURA_SEQ.NEXTVAL;
-        END IF;
-    END LOOP;
-  
-    INSERT INTO FACTURA_TAB 
-		VALUES (auxfact, :NEW.descripcion, :NEW.importe,(SELECT REF(m) FROM MECANICO_TAB m WHERE m.DNI = :new.dni), (SELECT REF(v) FROM VEHICULO_TAB v WHERE v.matricula = :new.matricula));
-        
+    --LLamada a la actualización de ids
+    V_NF := FACTURA_SEQ.nextval;
+    
+    INSERT INTO FACTURA_TAB VALUES 
+    (V_NF, :new.descripcion, :new.importe,:new.mecanico,:new.vehiculo);
+
   END;
+  
+ -- EJEMPLO INSERT FACTURA_TAB 
+ INSERT INTO FACTURA_TAB 
+ VALUES (NULL, 'TEST', 79.78,(SELECT REF(m) FROM MECANICO_TAB m WHERE m.DNI = '41247895J'), (SELECT REF(v) FROM VEHICULO_TAB v WHERE v.matricula = '3333ghi'));
+  
                          
                          
                          
