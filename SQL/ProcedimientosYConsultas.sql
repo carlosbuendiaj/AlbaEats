@@ -236,3 +236,91 @@ EliminarRestaurante(
 NombreRestaurante => NombreRestaurante , IdRestaurante => IdRestaurante
 );
 END;
+
+--Cambiar el metodo de pago de un cliente, si tiene contrareembolso, cambiarlo a tarjeta de credito y viceversa. 
+--Nos tendran que proporcionar el id del cliente, y los datos para cambiarlo.
+
+create or replace procedure CambiarMetodoPago(IdCliente Number) IS
+BEGIN
+DECLARE
+idCli cliente_tab.id_usuario%type;
+NumeroTarjeta Number(16);
+
+--declaracion de datos de contrareembolso
+NuevoObservacion  VARCHAR2(300);
+NuevoDaPropina NUMBER(1);
+--declaracion de datos de tarjetaCredito
+NuevoNumero Number(16) ;
+NuevoFechaCaducidad NUMBER(4) ;
+NuevoCvv NUMBER(3);
+NuevoPropietario VARCHAR2(50) ;
+
+BEGIN
+    --Selecciono el cliente el cual, voy a cambiar su ,etodo de pago
+    SELECT c.id_usuario into idCli FROM cliente_tab c WHERE c.id_usuario = IdCliente;
+    --obtenemos el numero de tarjeta del cliente pasado por parametro
+    SELECT TREAT(VALUE(m) AS Tarjeta_obj).numero into NumeroTarjeta 
+    FROM cliente_tab c, metodopago_tab m 
+    WHERE c.id_usuario = IdCliente;
+    
+    if (NumeroTarjeta=null) then
+        NuevoNumero :='&numero_tarjeta_credito';
+        NuevoFechaCaducidad :='&caducidad_tarjeta_credito';
+        NuevoCvv :='&cvv_tarjeta_credito';
+        NuevoPropietario :='&propietario_tarjeta_credito';
+        UPDATE metodopago_tab set numero=NuevoNumero, fecha_caducidad=NuevoFechaCaducidad, cvv=NuevoCvv, propiertario = NuevoPropietario WHERE idCli=IdCliente;
+    else    
+        NuevoObservacion :='&observacion_contrareembolso';
+        NuevoDaPropina :='& propina_contrareembolso';
+        UPDATE metodopago_tab set observaciones=NuevoObservacion, daPropina = NuevoDaPropina WHERE idCli=IdCliente;
+    end if;
+END;
+END CambiarMetodoPago;
+
+
+--Subir precios de un restaurante, hasta un precio tope, si lo supera, hacemos la mitad aumento de precio
+--Le pasamos por parametro el porcentaje de precio que subira y el precio maximo por el que un producto no sera subido
+
+create or replace procedure subidaPrecio(PorcentajeSubido Number, PrecioMaximo Number, nombreRestaurante VARCHAR2) IS
+BEGIN
+DECLARE
+TYPE Precios_productos IS TABLE OF producto_tab.precio_unit%TYPE;
+    precios Precios_productos ;
+
+BEGIN
+    --obtener el precio menor de precio maximo
+    select precio_unit bulk collect into precios  from producto_tab ;
+
+    for i in 1..precios.count loop
+        if((precios(i)+(precios(i)*0.1)) <= PrecioMaximo) then
+           DBMS_OUTPUT.PUT_LINE('entra en el if' || to_char((precios(i)+(precios(i)*0.1))));
+           update producto_tab  set precio_unit= precio_unit + (precio_unit*(PorcentajeSubido)) 
+           where coalesce (producto_tab.precio_unit, 1)= 1
+           and exists ( Select r.nombre from restaurante_tab r where r.nombre = nombreRestaurante);
+        else
+            DBMS_OUTPUT.PUT_LINE('entra en el else' || to_char((precios(i)+(precios(i)*0.1))));
+            update producto_tab set precio_unit= precio_unit + ((precio_unit*(PorcentajeSubido)/2)) 
+            where coalesce (producto_tab.precio_unit, 1)= 1
+           and exists ( Select r.nombre from restaurante_tab r where r.nombre = nombreRestaurante);
+        end if;
+
+    end loop;
+
+END;
+END subidaPrecio;
+
+
+CASO DE PRUEBA:
+DECLARE
+PorcentajeSubido number(2);
+PrecioMaximo NUMBER(2);
+nombreRestaurante VARCHAR(200);
+BEGIN
+PorcentajeSubido:=10;
+PrecioMaximo:=20;
+nombreRestaurante:='Restaurante Poli';
+
+subidaPrecio(
+PorcentajeSubido => PorcentajeSubido , PrecioMaximo => PrecioMaximo, nombreRestaurante=>nombreRestaurante
+);
+END;
