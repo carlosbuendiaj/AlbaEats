@@ -253,15 +253,20 @@ WHERE pro.ID_PRODUCTO = 10)
 
 --Carlos
 create or replace TRIGGER ACTUALIZACION_PRECIO
-FOR INSERT OR UPDATE ON  PEDIDO_TAB
+FOR INSERT OR UPDATE  ON  PEDIDO_TAB
 COMPOUND TRIGGER
    
      --GUARDO MATRICULA de VEHICULO_TAB
       TYPE MATRICULAS IS TABLE OF VEHICULO_TAB.matricula%TYPE;
             V_MATRICULAS MATRICULAS;
+            
+      TYPE R_MATRICULAS IS TABLE OF VEHICULO_TAB.matricula%TYPE;
+            R_VELECTRICO R_MATRICULAS;
+            
       --GUARDO DNI REPARTIDOR
       TYPE DNI_REP IS TABLE OF REPARTIDOR_TAB.DNI%TYPE;
             V_DNI_REP DNI_REP;
+            
     --GUARDO LA ID DE PEDIDO
       TYPE IDPEDIDO IS TABLE OF pedido_tab.id_pedido%TYPE;
             V_IDPEDIDO IDPEDIDO;     
@@ -285,15 +290,67 @@ COMPOUND TRIGGER
             SELECT TREAT(VALUE(v) AS vehelectrico_obj).matricula, TREAT(VALUE(v) AS vehelectrico_obj).autonomia 
             BULK COLLECT INTO  V_MATRICULAS, V_AUTONOMIA_E
             FROM vehiculo_tab v
-            WHERE TREAT(VALUE(v) AS vehelectrico_obj).matricula is not null ; --POSIBLE ERROR EN EL IS NOT NULL
-
+            WHERE TREAT(VALUE(v) AS vehelectrico_obj).matricula is not null ; 
+            
             --OBTENGO LOS DNIS DE LOS REPARTIDORES
             SELECT DNI
             BULK COLLECT INTO V_DNI_REP
             FROM REPARTIDOR_TAB
             WHERE DNI IS NOT NULL;
      END BEFORE STATEMENT;
-                         
+
+     --Executed before each row change- :NEW, :OLD are available
+     BEFORE EACH ROW IS
+     BEGIN
+        v_count := v_count +1;
+     END BEFORE EACH ROW;
+
+
+     --Executed after DML statement
+     AFTER STATEMENT IS
+     BEGIN
+        FOR v_i in 1..V_MATRICULAS.count loop
+           SELECT r.vehiculo.matricula into R_VELECTRICO(v_i) FROM REPARTIDOR_TAB r  WHERE r.vehiculo.matricula = V_MATRICULAS(v_i); --OBTENGO LOS REPARTIDORES CON VEHICULOS ELECTRICOS;
+            
+            FOR v_j in 1..V_DNI_REP.count loop
+               -- SELECT FROM WHERE --
+                SELECT p.id_pedido, p.precio, p.distancia into V_IDPEDIDO(v_j), v_precio, v_distancia   FROM PEDIDO_TAB p WHERE p.repartidor.DNI = V_DNI_REP(v_j); --AQUI GUARDO TODOS LOS DNIS, DEBERIAN DE SER LOS DNIS DE LOS REPARTIDORES QUE TENGAN UN VEHICULO ELECTRICO
+
+                UPDATE PEDIDO_TAB set PRECIO = (v_precio * (1+ (v_distancia)/4)/ V_AUTONOMIA_E(v_i)) ;--where  = V_DNI_REP(v_j) ;
+            end loop;
+
+        end loop;
+
+
+     END AFTER STATEMENT;
+
+END ACTUALIZACION_PRECIO;
+
+--Cada vez que se inserta una nueva factura, si el importe total supero los 1250 euros, 
+--se le divide a la mitad el precio de dicho importe, y se genera otra factura
+
+create or replace trigger NuevaFacturaReducida
+AFTER INSERT ON factura_tab
+declare
+id_factura_aux factura_tab.id_factura%type;
+descripcion_aux factura_tab.descripcion%type;
+importe_aux factura_tab.importe%type;
+mecanico_ref ref mecanico_obj;
+vehiculo_ref ref vehiculo_obj;
+
+BEGIN
+select f.id_factura, f.descripcion, f.importe, f.mecanico, f.vehiculo 
+into id_factura_aux,descripcion_aux,importe_aux, mecanico_ref, vehiculo_ref 
+from factura_tab f   where (rownum)=1 order by f.id_factura desc;
+--DBMS_OUTPUT.PUT_LINE('entra en el if ' ||importe_aux);
+if (importe_aux >= 4100.00) then
+--DBMS_OUTPUT.PUT_LINE('entra en el if ');
+update factura_tab set importe = importe /2 where id_factura = id_factura_aux;
+--DBMS_OUTPUT.PUT_LINE('pasa el update ');
+insert into factura_tab values(id_factura_aux +1,descripcion_aux || 'new',importe_aux/2, mecanico_ref, vehiculo_ref);
+end if;
+
+END;
 
 
 
