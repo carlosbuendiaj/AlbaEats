@@ -1,3 +1,7 @@
+--**********************************************
+-- TYPES
+--**********************************************
+
 DROP TYPE CLIENTE_OBJ FORCE;/
 DROP TYPE CONTRAREEMBOLSO_OBJ FORCE;/
 DROP TYPE FACTURA_OBJ FORCE;/
@@ -213,6 +217,10 @@ CREATE OR REPLACE TYPE FACTURA_OBJ AS OBJECT(
 );
 /
 
+--**********************************************
+-- TABLAS
+--**********************************************
+
 DROP TABLE RESTAURANTE_TAB FORCE;/
 DROP TABLE MECANICO_TAB FORCE;/
 DROP TABLE METODOPAGO_TAB FORCE;/
@@ -315,7 +323,9 @@ CREATE TABLE FACTURA_TAB OF FACTURA_OBJ(
 
 
 
-
+--**********************************************
+-- INSERTS
+--**********************************************
 
 INSERT INTO RESTAURANTE_TAB VALUES (RESTAURANTE_OBJ
 (1,'Pizzeria Antonio','Calle Falsa 123','Madrid', 00037, 666444777, 'Pizzeria', TO_DATE ('20:00:00', 'HH24:MI:SS'), TO_DATE ('23:30:00', 'HH24:MI:SS'), 7)); /
@@ -574,6 +584,10 @@ INSERT INTO FACTURA_TAB VALUES ( FACTURA_OBJ
 (000003, 'Rep. dirección', 450.52,(SELECT REF(m) FROM MECANICO_TAB m WHERE m.DNI = '41247895J'), (SELECT REF(v) FROM VEHICULO_TAB v WHERE v.matricula = '2222def')));
 /
 
+--**********************************************
+-- CONSULTAS
+--**********************************************
+
 -- Alberto
 -- Ofertas con finalizacion de hoy + restaurante
 CREATE OR REPLACE VIEW OFERTAS_HOY AS 
@@ -769,6 +783,9 @@ group by p.restaurante.ciudad
 Having count(p.id_producto) > 0;
 
 /
+--**********************************************
+--DISPARADORES (TRIGGERS)
+--**********************************************
 
 -- Alberto
 CREATE OR REPLACE TRIGGER ASSIGNACION_REPARTIDOR
@@ -977,160 +994,136 @@ COMPOUND TRIGGER
 
 END ACTUALIZACION_PRECIO;
 /
+
+
+
 --Alfonso
 
-CREATE OR REPLACE TRIGGER reparacion
-FOR INSERT OR UPDATE ON VEHICULO_TAB
-COMPOUND TRIGGER
-    
-    -- Coleccion que almacena las matriculas de todos los vehiculos de tipo electrico
-    TYPE MATRICULAS_ELECTRICOS IS TABLE OF VEHICULO_TAB.matricula%TYPE;
-    VMATRICULAS_ELECTRICOS MATRICULAS_ELECTRICOS;
-    
-    -- Coleccion que almacena la disponibilidad de todos los vehiculos de tipo electrico
-    TYPE DISPONIBILIDAD_ELECTRICOS IS TABLE OF VEHICULO_TAB.disponibilidad%TYPE;
-    VDISP_ELECTRICOS DISPONIBILIDAD_ELECTRICOS;
-    
-    -- Coleccion que almacena los dni de los mecanicos de todos los vehiculos de tipo electrico
-    TYPE MECANICODNI_ELECTRICOS IS TABLE OF VEHICULO_TAB.mecanico%TYPE;
-    VMDNI_ELECTRICOS MECANICODNI_ELECTRICOS;
-    
-    -- Coleccion que almacena las matriculas de todos los vehiculos de tipo gasolina
-    TYPE MATRICULAS_GASOLINA IS TABLE OF VEHICULO_TAB.matricula%TYPE;
-    VMATRICULAS_GASOLINA MATRICULAS_GASOLINA;
-    
-    -- Coleccion que almacena las matriculas de todos los vehiculos de tipo gasolina
-    TYPE DISPONIBILIDAD_GASOLINA IS TABLE OF VEHICULO_TAB.disponibilidad%TYPE;
-    VDISP_GASOLINA DISPONIBILIDAD_GASOLINA;
-    
-    -- Coleccion que almacena los dni de los mecanicos de todos los vehiculos de tipo electrico
-    TYPE MECANICODNI_GASOLINA IS TABLE OF VEHICULO_TAB.mecanico%TYPE;
-    VMDNI_GASOLINA MECANICODNI_GASOLINA;
-    
-    -- Coleccion que almacena los dni de todos los mecanicos
-    TYPE DNI_MECANICO IS TABLE OF MECANICO_TAB.dni%TYPE;
-    DNIM DNI_MECANICO;
-    
-    -- Coleccion que almacena los id de todas las facturas
-    TYPE ID_FACTURA IS TABLE OF FACTURA_TAB.id_factura%TYPE;
-    IDF ID_FACTURA;
-    
+/*Asignación automática de ids para los restaurantes nuevos
+                         
+EVENTO: Insertar un restaurante y modificar al id correspondiente automaticamente      
+
+PRECONDICIÓN: 
+	Alternativa 1. La tabla que contiene los restaurantes debe de estár totalmente vacia.
+	Alternativa 2. Modificar el contador incial de la secuencia a la cantidad total de restaurantes añadidos.
+
+PASOS:
+	1. Insertamos los datos necesarios del restaurante mediante el uso de la vista. Es imprescindible poner el primer valor a null. 
+	   (Se puede ver un ejemplo al final de este código)
+	2. El trigger comprueba los ids mediante una secuencia.
+	3. Se añade el valor de la secuencia como id junto con el resto de datos y se guarda en la tabla correspondiente.
+
+*/
+
+-- Creamos una secuencia para añadir los ids
+DROP SEQUENCE RESTAURANTE_SEQ;/
+DROP VIEW RESTAURANTES;/
+
+CREATE SEQUENCE RESTAURANTE_SEQ INCREMENT BY 1 START WITH 1 MINVALUE 1;/
+   
+  CREATE OR REPLACE TRIGGER Numero_restaurante
+  BEFORE INSERT ON RESTAURANTE_TAB
+  FOR EACH ROW
+  BEGIN
+    :NEW.id_restaurante := RESTAURANTE_SEQ.NEXTVAL;
+  END;
+  /
+
+--Creamos la vista con los restaurantes para que pueda modificarse por el trigger
+CREATE OR REPLACE VIEW RESTAURANTES AS ( SELECT * FROM RESTAURANTE_TAB );/
+
+--Trigger encargado de actualizar los ids de los restaurantes
+create or replace TRIGGER Añadir_restaurante
+  INSTEAD OF INSERT ON RESTAURANTES
+  FOR EACH ROW
+  
+  DECLARE
+    V_NR number;
       
-    --Otras variables
-    vehiculo_matricula  VEHICULO_TAB.matricula%TYPE;
-    esElectrico NUMBER(1);
-    mat VARCHAR2(7);
-    contfactura NUMBER(10);
-    auxloop NUMBER(10);
-    nid_factura NUMBER(10,0);
-    ndescripcion VARCHAR2(20);
-    nimporte NUMBER(8,2);
-    guardadni varchar2(9);
+  BEGIN
+
+    --LLamada a la actualización de ids
+    V_NR := RESTAURANTE_SEQ.nextval;
     
-    BEFORE STATEMENT IS
-    BEGIN
-        --Obtenemos las matriculas de todos los electricos y las almacenamos en la coleccion
-        SELECT TREAT(VALUE(v) AS vehelectrico_obj).matricula, TREAT(VALUE(v) AS vehelectrico_obj).disponibilidad, TREAT(VALUE(v) AS vehelectrico_obj).mecanico
-        BULK COLLECT INTO VMATRICULAS_ELECTRICOS, VDISP_ELECTRICOS, VMDNI_ELECTRICOS
-        FROM vehiculo_tab v
-        WHERE TREAT(VALUE(v) AS vehelectrico_obj).matricula <> 'null' ;
-        
-        --Obtenemos las matriculas de todos los gasolina y las almacenamos en la coleccion
-        SELECT TREAT(VALUE(v) AS vehgasolina_obj).matricula, TREAT(VALUE(v) AS vehgasolina_obj).disponibilidad, TREAT(VALUE(v) AS vehgasolina_obj).mecanico
-        BULK COLLECT INTO VMATRICULAS_GASOLINA, VDISP_GASOLINA, VMDNI_GASOLINA
-        FROM vehiculo_tab v
-        WHERE TREAT(VALUE(v) AS vehelectrico_obj).matricula <> 'null' ;
-        
-        --Obtenemos los dni de todos los mecanicos y los almacenaos en la coleccion
-        SELECT VALUE(m).dni
-        BULK COLLECT INTO DNIM
-        FROM MECANICO_TAB m
-        WHERE VALUE(m).dni IS NOT NULL;
-        
-        --Obtenemos los dni de todos los mecanicos y los almacenaos en la coleccion
-        SELECT VALUE(f).id_factura
-        BULK COLLECT INTO IDF
-        FROM FACTURA_TAB f
-        WHERE VALUE(f).id_factura IS NOT NULL;
-        
-    END BEFORE STATEMENT;
+    --Recogida de los datos para el insert
+    INSERT INTO RESTAURANTE_TAB VALUES
+    (V_NR,:new.nombre,:new.direccion,:new.ciudad, :new.codigo_postal, :new.telefono, :new.tipo_restaurante, :new.hora_apertura, :new.hora_cierre, :new.calificacion);
+  
+  
+  END;
+  /
+  
+  -- Ejemplo muestra
+    /*  INSERT INTO RESTAURANTES VALUES
+        (null,'Test','Test123','Madrid', 00037, 666444777, 'Pizzeria', TO_DATE ('20:00:00', 'HH24:MI:SS'), TO_DATE ('23:30:00', 'HH24:MI:SS'), 7);
+	*/
+
+/*Asignación automática de ids para las nuevas facturas
+                         
+EVENTO: Insertar una factura y modificar al id correspondiente automaticamente. Ademas la disponibilidad del vehiculo X cambia a 0 simulando que
+        está siendo reparado.
+
+PRECONDICIÓN: 
+	Alternativa 1. La tabla que contiene las facturas debe de estár totalmente vacia.
+	Alternativa 2. Modificar el contador incial de la secuencia a la cantidad total de facturas añadidas.
+
+PASOS:
+	1. Insertamos los datos necesarios de la factura mediante el uso de la vista. Es imprescindible poner el primer valor a null. 
+	   (Se puede ver un ejemplo al final de este código)
+	2. El trigger comprueba los ids mediante una secuencia.
+	3. Se añade el valor de la secuencia como id junto con el resto de datos y se guarda en la tabla correspondiente.
+	4. Se actualiza la disponibilidad del vehiculo X a 0.
+
+*/
+-- Creamos una secuencia para añadir los ids
+DROP SEQUENCE FACTURA_SEQ;/
+DROP VIEW FACTURAS;/
+
+CREATE SEQUENCE FACTURA_SEQ INCREMENT BY 1 START WITH 1 MINVALUE 1;/
+
+   
+  CREATE OR REPLACE TRIGGER Numero_factura
+  BEFORE INSERT ON FACTURA_TAB
+  FOR EACH ROW
+  BEGIN
+    :NEW.id_factura := FACTURA_SEQ.NEXTVAL;
+  END;
+  /
+
+--Creamos la vista con las facturas para que pueda modificarse por el trigger
+CREATE OR REPLACE VIEW FACTURAS AS ( SELECT * FROM FACTURA_TAB );/
+
+
+--Trigger encargado de actualizar los ids de las facturas
+create or replace TRIGGER Añadir_factura
+  INSTEAD OF INSERT ON FACTURAS
+  FOR EACH ROW
+  
+  DECLARE
+    V_NF number;
+      
+  BEGIN
+
+    --LLamada a la actualización de ids
+    V_NF := FACTURA_SEQ.nextval;
     
-    AFTER STATEMENT IS
-    BEGIN
+    INSERT INTO FACTURA_TAB VALUES 
+    (V_NF, :new.descripcion, :new.importe,:new.mecanico,:new.vehiculo);
     
-    contfactura := 1;
-    
-    --Añadimos la matrícula del vehiculo a reparar y si es electrico o no (1 --> SI, 0 -->NO)
-    mat := '2222def';
-    esElectrico := 0;
-    
-    
-    --Comprobamos si es electrico o de gasolina
-    IF esElectrico = 1 THEN
-        -- Recorremos todas las matriculas almacenadas de los vehiculos que son electricos
-        FOR i IN 1..VMATRICULAS_ELECTRICOS.COUNT LOOP
-            -- Comprobacion de que esta la matricula y el vehiculo esta disponible
-            IF mat =  VMATRICULAS_ELECTRICOS(i) THEN  
-                IF VDISP_ELECTRICOS(i) = 1 THEN
-                   UPDATE VEHICULO_TAB SET DISPONIBILIDAD = 0 where mat = VMATRICULAS_ELECTRICOS(i);
-                END IF;
-            END IF;
-        END LOOP;
-     
-     
-    ELSE
-    -- Recorremos todas las matriculas almacenadas de los vehiculos que son gasolina
-        FOR i IN 1..VMATRICULAS_GASOLINA.COUNT LOOP
-            -- Comprobacion de que esta la matricula y el vehiculo esta disponible
-            IF mat =  VMATRICULAS_GASOLINA(i) THEN  
-                IF VDISP_GASOLINA(i) = 1 THEN
-                   UPDATE VEHICULO_TAB SET DISPONIBILIDAD = 0 where mat = VMATRICULAS_GASOLINA(i);
-                END IF;
-             END IF;
-        END LOOP;
-     END IF;
-    
-    --Agregamos los datos que queremos generar en la factura
-    nid_factura := 000001;
-    ndescripcion := 'Rep. frenos';
-    nimporte :=  600;
-    
-    --Realiza un blucle para evitar duplicados de id
-    FOR j IN 1..IDF.COUNT LOOP
-        IF nid_factura = IDF(j) THEN
-            nid_factura := nid_factura + 000001;
-        END IF;
-    END LOOP;
-    
-    --Llamada al procedimiento para añadir los datos
-    IF esElectrico = 1 THEN
-        FOR k IN 1..VMATRICULAS_ELECTRICOS.COUNT LOOP
-            IF mat =  VMATRICULAS_ELECTRICOS(k) THEN
-                FOR ki IN 1..DNIM.COUNT LOOP
-                   FOR kj IN 1..VMDNI_ELECTRICOS.COUNT LOOP 
-                        IF DNIM(k) = VMDNI_ELECTRICOS(kj) THEN
-                        CREAR_FACTURA(nid_factura, ndescripcion, nimporte, mat, DNIM(ki));
-                        END IF;
-                    END LOOP;
-                END LOOP;
-            END IF;
-        END LOOP;
-    ELSE
-         FOR k IN 1..VMATRICULAS_GASOLINA.COUNT LOOP
-            IF mat =  VMATRICULAS_GASOLINA(k) THEN
-                FOR ki IN 1..DNIM.COUNT LOOP
-                   FOR kj IN 1..VMDNI_GASOLINA.COUNT LOOP 
-                        IF DNIM(ki) = VMDNI_GASOLINA(kj) THEN
-                        CREAR_FACTURA(nid_factura, ndescripcion, nimporte, mat, DNIM(ki));
-                        END IF;
-                    END LOOP;
-                END LOOP;
-            END IF;
-        END LOOP;
-    END IF;
-    END AFTER STATEMENT;
-END reparacion;
-/
+    UPDATE vehiculo_tab V SET disponibilidad = 0 WHERE REF(V) = :new.vehiculo;
+
+  END;
+  /
+  
+ -- EJEMPLO INSERT FACTURA_TAB 
+ /*INSERT INTO FACTURA_TAB 
+ VALUES (NULL, 'TEST', 79.78,(SELECT REF(m) FROM MECANICO_TAB m WHERE m.DNI = '41247895J'), (SELECT REF(v) FROM VEHICULO_TAB v WHERE v.matricula = '3333ghi'));*/
+
+
+--**********************************************
+--PROCEDIMIENTOS (PROCEDURE)
+--**********************************************
+
 --Alberto
 create or replace FUNCTION CALCULAR_PRECIO_PEDIDO (varid NUMBER) RETURN NUMBER IS 
 BEGIN
@@ -1265,46 +1258,89 @@ BEGIN
 
 
 END;
-
-
 END DESPEDIR_REPARTIDOR;
 /
+
 --Alfonso
 -- Función que creará una nueva factura con los parámetros y relaciones que se le pasen
-CREATE OR REPLACE PROCEDURE CREAR_FACTURA(nid_factura number, ndescripcion varchar2, nimporte number,
+create or replace PROCEDURE CREAR_FACTURA(nid_factura number, ndescripcion varchar2, nimporte number,
 m_dni varchar2, v_matricula varchar2) IS
-FACTURA_N REF FACTURA_OBJ;
+BEGIN
+DECLARE
+
 BEGIN
 
-    SELECT REF(M) INTO MECANICO FROM MECANICO_TAB M
-    WHERE DNI = m_dni;
+    INSERT INTO FACTURA_TAB VALUES ( nid_factura, ndescripcion, nimporte,
+    (SELECT ref(m) FROM MECANICO_TAB m WHERE m.dni = m_dni ),
+    (SELECT ref(v) FROM VEHICULO_TAB v WHERE v.matricula = v_matricula));
 
-    INSERT INTO FACTURA_OBJ VALUES (nid_factura, ndescripcion, nimporte,
-    (SELECT ref(m) FROM MECANICO_TAB m WHERE dni = m_dni ),
-    (SELECT ref(v) FROM VEHICULO_TAB v WHERE matricula = v_matricula));
+     DBMS_OUTPUT.PUT_LINE('Factura creada');
 
-EXCEPTION
-WHEN NO_DATA_FOUND THEN
-    DBMS_OUTPUT.PUT_LINE('ERROR,EL MECANICO O EL VEHICULO NO EXISTEN');
-
+END;
 END CREAR_FACTURA;
 /
      
-     
---********************************************************************************************
--- XML
---********************************************************************************************
------------------
---XML Alfonso
-----------------
+-- Función que despedirá a un mecánico
+create or replace PROCEDURE DESPEDIR_MECANICO (dnim VARCHAR2) IS
+BEGIN
+DECLARE
 
+dnimecan MECANICO_TAB.dni%TYPE;
+mvehiculo  VEHICULO_TAB.matricula%TYPE;
+
+BEGIN
+    --Almacenamos los vehiculos con el dni pasado
+    SELECT v.matricula INTO mvehiculo FROM VEHICULO_TAB v WHERE v.mecanico.dni = dnim;
+
+    --Desvinculamos el vehiculo del mecanico y eliminamos al mecánico
+    DBMS_OUTPUT.PUT_LINE('Actualizando vehiculo del repartido de la DB');
+    UPDATE VEHICULO_TAB SET mecanico = Null WHERE matricula = mvehiculo;
+    DBMS_OUTPUT.PUT_LINE('Eliminando al mecanico');
+    DELETE FROM MECANICO_TAB m WHERE m.dni = dnim;
+    DBMS_OUTPUT.PUT_LINE('MECANICO ELIMINADO');
+
+END;
+END DESPEDIR_MECANICO;
+/   
+
+--Asocia un mecánico con un vehiculo que no tenga mecánico
+create or replace PROCEDURE ASOCIAR_MECANICO (dnim VARCHAR2) IS
+BEGIN
+DECLARE
+
+     meca REF MECANICO_OBJ;
+     dnimecan MECANICO_TAB.dni%TYPE;
+     mvehiculo  VEHICULO_TAB.matricula%TYPE;
+
+BEGIN
+    --Buscamos la referencia del mécanco asociado al dni del parámetro
+    SELECT REF(m) INTO meca FROM MECANICO_TAB m WHERE m.dni = dnim;
+
+    --Almacenamos los vehiculos que no tienen mecánico asociado
+    SELECT v.matricula INTO mvehiculo FROM VEHICULO_TAB v WHERE v.mecanico IS NULL;
+
+    --Actualizamos la fecha de despido y desvinculamos el vehiculo del mecanico;
+    DBMS_OUTPUT.PUT_LINE('Actualizando vehiculo de la DB');
+    UPDATE VEHICULO_TAB SET mecanico = meca WHERE matricula = mvehiculo;
+
+END;
+END ASOCIAR_MECANICO;
+/
+     
+     
+--**********************************************
+-- XML
+--**********************************************
+-----------------
+-- XML Alfonso
+----------------
 
 drop table provrest force;/
 drop table product force;/
 
---********************
+-----------------------
 --TABLA PROVEEDORES
---********************
+----------------------
 
 begin
 DBMS_XMLSCHEMA.REGISTERSCHEMA(SCHEMAURL=>'proveedores.xsd',
@@ -1411,9 +1447,9 @@ XDB.XMLINDEX PARAMETERS ('PATHS (INCLUDE (/proveedores/proveedor/dni))');/
 
 
 
---*******************
+-----------------------
 --PRODUCTOS
---*******************
+-----------------------
 begin
 DBMS_XMLSCHEMA.REGISTERSCHEMA(SCHEMAURL=>'productosbase.xsd',
 SCHEMADOC=>'<?xml version="1.0"
