@@ -294,7 +294,69 @@ COMPOUND TRIGGER
             WHERE DNI IS NOT NULL;
      END BEFORE STATEMENT;
                          
+
+
+
 --Alfonso
+
+/*Asignación automática de ids para los restaurantes nuevos
+                         
+EVENTO: Insertar una factura y modificar al id correspondiente automaticamente      
+
+PRECONDICIÓN: 
+	Alternativa 1. La tabla que contiene los restaurantes debe de estár totalmente vacia.
+	Alternativa 2. Modificar el contador incial de la secuencia a la cantidad total de restaurantes añadidos.
+
+PASOS:
+	1. Insertamos los datos necesarios del restaurante mediante el uso de la vista. Es imprescindible poner el primer valor a null. 
+	   (Se puede ver un ejemplo al final de este código)
+	2. El trigger comprueba los ids mediante una secuencia.
+	3. Se añade el valor de la secuencia como id junto con el resto de datos y se guarda en la tabla correspondiente.
+
+*/
+
+-- Creamos una secuencia para añadir los ids
+CREATE SEQUENCE RESTAURANTE_SEQ INCREMENT BY 1 START WITH 1 MINVALUE 1;
+   
+  CREATE OR REPLACE TRIGGER Numero_restaurante
+  BEFORE INSERT ON RESTAURANTE_TAB
+  FOR EACH ROW
+  BEGIN
+    :NEW.id_restaurante := FACTURA_SEQ.NEXTVAL;
+  END;
+
+--Creamos la vista con los restaurantes para que pueda modificarse por el trigger
+CREATE OR REPLACE VIEW RESTAURANTES AS ( SELECT * FROM RESTAURANTE_TAB );
+
+--Trigger encargado de actualizar los ids de los restaurantes
+create or replace TRIGGER Añadir_restaurante
+  INSTEAD OF INSERT ON RESTAURANTES
+  FOR EACH ROW
+  
+  DECLARE
+    V_NR number;
+      
+  BEGIN
+
+    --LLamada a la actualización de ids
+    V_NR := RESTAURANTE_SEQ.nextval;
+    
+    --Recogida de los datos para el insert
+    INSERT INTO RESTAURANTE_TAB VALUES
+    (V_NR,:new.nombre,:new.direccion,:new.ciudad, :new.codigo_postal, :new.telefono, :new.tipo_restaurante, :new.hora_apertura, :new.hora_cierre, :new.calificacion);
+  
+  
+  END;
+  
+  -- Ejemplo muestra
+      INSERT INTO RESTAURANTES VALUES
+        (null,'Test','Test123','Madrid', 00037, 666444777, 'Pizzeria', TO_DATE ('20:00:00', 'HH24:MI:SS'), TO_DATE ('23:30:00', 'HH24:MI:SS'), 7);
+
+
+
+
+
+
 /*Asignación automática de ids para las facturas
                          
 EVENTO: Insertar una factura y modificar al id correspondiente                        
