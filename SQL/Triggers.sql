@@ -322,7 +322,7 @@ CREATE SEQUENCE RESTAURANTE_SEQ INCREMENT BY 1 START WITH 1 MINVALUE 1;
   BEFORE INSERT ON RESTAURANTE_TAB
   FOR EACH ROW
   BEGIN
-    :NEW.id_restaurante := FACTURA_SEQ.NEXTVAL;
+    :NEW.id_restaurante := RESTAURANTE_SEQ.NEXTVAL;
   END;
 
 --Creamos la vista con los restaurantes para que pueda modificarse por el trigger
