@@ -355,7 +355,8 @@ create or replace TRIGGER Añadir_restaurante
 
 /*Asignación automática de ids para las nuevas facturas
                          
-EVENTO: Insertar una factura y modificar al id correspondiente automaticamente      
+EVENTO: Insertar una factura y modificar al id correspondiente automaticamente. Ademas la disponibilidad del vehiculo X cambia a 0 simulando que
+        está siendo reparado.
 
 PRECONDICIÓN: 
 	Alternativa 1. La tabla que contiene las facturas debe de estár totalmente vacia.
@@ -366,6 +367,7 @@ PASOS:
 	   (Se puede ver un ejemplo al final de este código)
 	2. El trigger comprueba los ids mediante una secuencia.
 	3. Se añade el valor de la secuencia como id junto con el resto de datos y se guarda en la tabla correspondiente.
+	4. Se actualiza la disponibilidad del vehiculo X a 0.
 
 */
 -- Creamos una secuencia para añadir los ids
@@ -400,6 +402,8 @@ create or replace TRIGGER Añadir_factura
     
     INSERT INTO FACTURA_TAB VALUES 
     (V_NF, :new.descripcion, :new.importe,:new.mecanico,:new.vehiculo);
+    
+    UPDATE vehiculo_tab V SET disponibilidad = 0 WHERE REF(V) = :new.vehiculo;
 
   END;
   
