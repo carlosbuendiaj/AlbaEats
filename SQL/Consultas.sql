@@ -60,11 +60,11 @@ END;
 
 
 --Carlos
---Mostrar pedido cuyo precio sea superior a 10€
+--Mostrar pedido cuyo precio sea superior a 10€ y que estan disponibles y el repartidor actualmente esta trabajando
 CREATE VIEW PedMayor10 AS
-    SELECT id_pedido, precio, pagado, estado
-    FROM PEDIDO_TAB
-    WHERE Precio > 10;
+    SELECT p.id_pedido, p.precio, p.pagado, p.estado, r.fechabaja
+    FROM PEDIDO_TAB p, repartidor_tab r
+    WHERE Precio > 10 and r.vehiculo.disponibilidad = 1 and r.fechabaja > sysdate;
     
 
 --Mostrar los restaurantes pertenecientes a Madrid que tengan pizzas
@@ -77,11 +77,12 @@ CREATE OR REPLACE VIEW RestMyP AS
     FROM RESTAURANTE_TAB 
     WHERE ciudad='Madrid');
 
---Mostrar productos con un stock que sea menor de 5€    
-CREATE VIEW StockMAY5 AS
-    SELECT nombre, descripcion, stock
-    FROM Producto_TAB
-    WHERE Stock<5;
+--Mostrar productos con un precio menor a 5 euros, esten el Albacete y muestre los mas baratos primero 
+CREATE or replace VIEW MostrarPreciosBajos AS
+    SELECT p.nombre, p.descripcion, p.stock, p.restaurante.nombre, p.precio_unit
+    FROM Producto_TAB p
+    WHERE p.precio_unit<5 and p.restaurante.ciudad= 'Albacete'
+    order by p.precio_unit asc;
 
 
 --Sumar todo el dinero gastado por Lucia
@@ -111,12 +112,10 @@ ORDER BY(o.FINALIZACION)
 ;
 
 
---BORRAR LOS PRODUCTOS QUE TENGAN 0 de stock
-DELETE
+--BORRAR LOS PRODUCTOS QUE TENGAN 0 de stock y que esten en madrid
+DELETE 
 FROM PRODUCTO_TAB p
-WHERE p.stock <0 OR p.stock =0;
-
-
+WHERE p.stock <0 OR p.stock =0 and p.restaurante.ciudad = 'Madrid';
 
 -- Alfonso
 -- 1.- Mostrar los Mecánicos que actualmente estén en periodo de contratación y haya realizado una reparación 
