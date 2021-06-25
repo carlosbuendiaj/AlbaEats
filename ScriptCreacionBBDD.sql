@@ -927,15 +927,20 @@ END;
  /
 --Carlos
 create or replace TRIGGER ACTUALIZACION_PRECIO
-FOR INSERT OR UPDATE ON  PEDIDO_TAB
+FOR INSERT OR UPDATE  ON  PEDIDO_TAB
 COMPOUND TRIGGER
    
      --GUARDO MATRICULA de VEHICULO_TAB
       TYPE MATRICULAS IS TABLE OF VEHICULO_TAB.matricula%TYPE;
             V_MATRICULAS MATRICULAS;
+            
+      TYPE R_MATRICULAS IS TABLE OF VEHICULO_TAB.matricula%TYPE;
+            R_VELECTRICO R_MATRICULAS;
+            
       --GUARDO DNI REPARTIDOR
       TYPE DNI_REP IS TABLE OF REPARTIDOR_TAB.DNI%TYPE;
             V_DNI_REP DNI_REP;
+            
     --GUARDO LA ID DE PEDIDO
       TYPE IDPEDIDO IS TABLE OF pedido_tab.id_pedido%TYPE;
             V_IDPEDIDO IDPEDIDO;     
@@ -959,8 +964,8 @@ COMPOUND TRIGGER
             SELECT TREAT(VALUE(v) AS vehelectrico_obj).matricula, TREAT(VALUE(v) AS vehelectrico_obj).autonomia 
             BULK COLLECT INTO  V_MATRICULAS, V_AUTONOMIA_E
             FROM vehiculo_tab v
-            WHERE TREAT(VALUE(v) AS vehelectrico_obj).matricula is not null ; --POSIBLE ERROR EN EL IS NOT NULL
-
+            WHERE TREAT(VALUE(v) AS vehelectrico_obj).matricula is not null ; 
+            
             --OBTENGO LOS DNIS DE LOS REPARTIDORES
             SELECT DNI
             BULK COLLECT INTO V_DNI_REP
@@ -979,12 +984,13 @@ COMPOUND TRIGGER
      AFTER STATEMENT IS
      BEGIN
         FOR v_i in 1..V_MATRICULAS.count loop
-            SELECT r.vehiculo.matricula into V_MATRICULAS(v_i) FROM REPARTIDOR_TAB r  WHERE r.vehiculo.matricula = V_MATRICULAS(v_i); --OBTENGO LOS REPARTIDORES CON VEHICULOS ELECTRICOS;
-
+           SELECT r.vehiculo.matricula into R_VELECTRICO(v_i) FROM REPARTIDOR_TAB r  WHERE r.vehiculo.matricula = V_MATRICULAS(v_i); --OBTENGO LOS REPARTIDORES CON VEHICULOS ELECTRICOS;
+            
             FOR v_j in 1..V_DNI_REP.count loop
-                SELECT p.id_pedido, p.precio, p.distancia into V_IDPEDIDO(v_j), v_precio, v_distancia   FROM PEDIDO_TAB p WHERE p.repartidor.DNI = V_DNI_REP(v_j);
+               -- SELECT FROM WHERE --
+                SELECT p.id_pedido, p.precio, p.distancia into V_IDPEDIDO(v_j), v_precio, v_distancia   FROM PEDIDO_TAB p WHERE p.repartidor.DNI = V_DNI_REP(v_j); --AQUI GUARDO TODOS LOS DNIS, DEBERIAN DE SER LOS DNIS DE LOS REPARTIDORES QUE TENGAN UN VEHICULO ELECTRICO
 
-                UPDATE PEDIDO_TAB set PRECIO = (v_precio * (1+ (v_distancia)/4)/ V_AUTONOMIA_E(v_i));
+                UPDATE PEDIDO_TAB set PRECIO = (v_precio * (1+ (v_distancia)/4)/ V_AUTONOMIA_E(v_i)) ;--where  = V_DNI_REP(v_j) ;
             end loop;
 
         end loop;
@@ -995,8 +1001,32 @@ COMPOUND TRIGGER
 END ACTUALIZACION_PRECIO;
 /
 
+--Cada vez que se inserta una nueva factura, si el importe total supero los 4100 euros, 
+--se le divide a la mitad el precio de dicho importe, y se genera otra factura
 
+create or replace trigger NuevaFacturaReducida
+AFTER INSERT ON factura_tab
+declare
+id_factura_aux factura_tab.id_factura%type;
+descripcion_aux factura_tab.descripcion%type;
+importe_aux factura_tab.importe%type;
+mecanico_ref ref mecanico_obj;
+vehiculo_ref ref vehiculo_obj;
 
+BEGIN
+select f.id_factura, f.descripcion, f.importe, f.mecanico, f.vehiculo 
+into id_factura_aux,descripcion_aux,importe_aux, mecanico_ref, vehiculo_ref 
+from factura_tab f   where (rownum)=1 order by f.id_factura desc;
+--DBMS_OUTPUT.PUT_LINE('entra en el if ' ||importe_aux);
+if (importe_aux >= 4100.00) then
+--DBMS_OUTPUT.PUT_LINE('entra en el if ');
+update factura_tab set importe = importe /2 where id_factura = id_factura_aux;
+--DBMS_OUTPUT.PUT_LINE('pasa el update ');
+insert into factura_tab values(id_factura_aux +1,descripcion_aux || 'new',importe_aux/2, mecanico_ref, vehiculo_ref);
+end if;
+
+END;
+/
 --Alfonso
 
 /*Asignación automática de ids para los restaurantes nuevos
@@ -1326,7 +1356,96 @@ BEGIN
 END;
 END ASOCIAR_MECANICO;
 /
-     
+
+--Carlos
+--Funcion que eliminara a un restaurante dado su nombre y su id
+create or replace PROCEDURE EliminarRestaurante(NombreRestaurante VARCHAR2, IdRestaurante NUMBER) IS
+BEGIN
+DECLARE
+NombreRest restaurante_tab.nombre%type;
+IdRest restaurante_tab.id_restaurante%type;
+
+BEGIN
+    --
+    SELECT t.nombre, t.id_restaurante into NombreRest, Idrest FROM RESTAURANTE_TAB t 
+    WHERE t.nombre=NombreRestaurante and t.id_restaurante = IdRestaurante ;
+    DBMS_OUTPUT.PUT_LINE('Eliminando restaurante de la DB');
+    DELETE FROM RESTAURANTE_TAB WHERE nombre=NombreRest and id_restaurante= IdRest;
+END;
+
+END EliminarRestaurante;
+/
+--Cambiar el metodo de pago de un cliente, si tiene contrareembolso, cambiarlo a tarjeta de credito y viceversa. 
+--Nos tendran que proporcionar el id del cliente, y los datos para cambiarlo.
+
+create or replace procedure CambiarMetodoPago(IdCliente Number) IS
+BEGIN
+DECLARE
+idCli cliente_tab.id_usuario%type;
+NumeroTarjeta Number(16);
+
+--declaracion de datos de contrareembolso
+NuevoObservacion  VARCHAR2(300);
+NuevoDaPropina NUMBER(1);
+--declaracion de datos de tarjetaCredito
+NuevoNumero Number(16) ;
+NuevoFechaCaducidad NUMBER(4) ;
+NuevoCvv NUMBER(3);
+NuevoPropietario VARCHAR2(50) ;
+
+BEGIN
+    --Selecciono el cliente el cual, voy a cambiar su ,etodo de pago
+    SELECT c.id_usuario into idCli FROM cliente_tab c WHERE c.id_usuario = IdCliente;
+    --obtenemos el numero de tarjeta del cliente pasado por parametro
+    SELECT TREAT(VALUE(m) AS Tarjeta_obj).numero into NumeroTarjeta 
+    FROM cliente_tab c, metodopago_tab m 
+    WHERE c.id_usuario = IdCliente;
+    
+    if (NumeroTarjeta=null) then
+        NuevoNumero :='&numero_tarjeta_credito';
+        NuevoFechaCaducidad :='&caducidad_tarjeta_credito';
+        NuevoCvv :='&cvv_tarjeta_credito';
+        NuevoPropietario :='&propietario_tarjeta_credito';
+        UPDATE metodopago_tab set numero=NuevoNumero, fecha_caducidad=NuevoFechaCaducidad, cvv=NuevoCvv, propiertario = NuevoPropietario WHERE idCli=IdCliente;
+    else    
+        NuevoObservacion :='&observacion_contrareembolso';
+        NuevoDaPropina :='& propina_contrareembolso';
+        UPDATE metodopago_tab set observaciones=NuevoObservacion, daPropina = NuevoDaPropina WHERE idCli=IdCliente;
+    end if;
+END;
+END CambiarMetodoPago;
+/
+--Subir precios de un restaurante, hasta un precio tope, si lo supera, hacemos la mitad aumento de precio
+--Le pasamos por parametro el porcentaje de precio que subira y el precio maximo por el que un producto no sera subido
+
+create or replace procedure subidaPrecio(PorcentajeSubido Number, PrecioMaximo Number, nombreRestaurante VARCHAR2) IS
+BEGIN
+DECLARE
+TYPE Precios_productos IS TABLE OF producto_tab.precio_unit%TYPE;
+    precios Precios_productos ;
+
+BEGIN
+    --obtener el precio menor de precio maximo
+    select precio_unit bulk collect into precios  from producto_tab ;
+
+    for i in 1..precios.count loop
+        if((precios(i)+(precios(i)*0.1)) <= PrecioMaximo) then
+           DBMS_OUTPUT.PUT_LINE('entra en el if ' || to_char((precios(i)+(precios(i)*0.1))));
+           update producto_tab  set precio_unit= precio_unit + (precio_unit*(PorcentajeSubido)) 
+           where coalesce (producto_tab.precio_unit, 1)= 1
+           and exists ( Select r.nombre from restaurante_tab r where r.nombre = nombreRestaurante);
+        else
+            DBMS_OUTPUT.PUT_LINE('entra en el else ' || to_char((precios(i)+(precios(i)*0.1))));
+            update producto_tab set precio_unit= precio_unit + ((precio_unit*(PorcentajeSubido)/2)) 
+            where coalesce (producto_tab.precio_unit, 1)= 1
+           and exists ( Select r.nombre from restaurante_tab r where r.nombre = nombreRestaurante);
+        end if;
+
+    end loop;
+
+END;
+END subidaPrecio;
+/
      
 --**********************************************
 -- XML
@@ -1940,11 +2059,10 @@ FROM INCIDENCIAS_TAB  i ;
 ----------------
 --XML Carlos
 ----------------
-
 DROP table taller_tab force;/
 
 BEGIN
-DBMS_XMLSCHEMA.REGISTERSCHEMA(SCHEMAURL=>'taller.xsd',
+DBMS_XMLSCHEMA.REGISTERSCHEMA(SCHEMAURL=>'Taller.xsd',
 SCHEMADOC=>'<?xml version="1.0" encoding="utf-8"?>
     <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
         <xs:element name="taller" type="Taller">
@@ -1953,11 +2071,12 @@ SCHEMADOC=>'<?xml version="1.0" encoding="utf-8"?>
                 <xs:field xpath="xs:Id_taller"/> 
             </xs:key>
         </xs:element>
+
 <xs:complexType name="Taller">
   <xs:sequence>
     <xs:element name="Id_taller" type="xs:integer"/>
     <xs:element name="Nombre" type="xs:string"/>
-    <xs:element name="direccion" type="xs:string"/>
+    <xs:element name="Direccion" type="xs:string"/>
     <xs:element name="CodigoPostal">
         <xs:simpleType>  
             <xs:restriction base="xs:positiveInteger">
@@ -1966,6 +2085,8 @@ SCHEMADOC=>'<?xml version="1.0" encoding="utf-8"?>
         </xs:simpleType>
     </xs:element>
     <xs:element name="admin" type="administrador" minOccurs="1"/>
+    <xs:element name="st" type="estadoTaller" minOccurs="1" maxOccurs="2"/>
+    <xs:element name="ab" type="abogado" minOccurs="1" maxOccurs="30"/>
   </xs:sequence>
 </xs:complexType>
 
@@ -1984,6 +2105,44 @@ SCHEMADOC=>'<?xml version="1.0" encoding="utf-8"?>
     </xs:sequence>
 </xs:complexType>
 
+<xs:complexType name="estadoTaller">
+	<xs:sequence>
+		<xs:element name="estado_taller">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="Libre"/>
+					<xs:enumeration value="Ocupado"/>
+					<xs:enumeration value="Cerrado"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:element>
+	</xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="abogado">
+	<xs:sequence>
+    <xs:element name="Nombre" type="xs:string"/>
+    <xs:element name="Apellidos" type="xs:string"/>
+    <xs:element name="DNI" type="xs:string"/>
+    <xs:element name="NumeroSS" type="xs:string"/>
+    <xs:element name="ExperienciaLaboral">
+        <xs:simpleType>  
+            <xs:restriction base="xs:positiveInteger">
+                    <xs:totalDigits value="2" />
+            </xs:restriction>
+        </xs:simpleType>
+    </xs:element>
+    <xs:element name="case" type="caso" minOccurs="1" maxOccurs="5"/>
+    </xs:sequence>
+</xs:complexType>
+
+<xs:complexType name="caso">
+    <xs:sequence>
+       <xs:element name="ID" type="xs:integer"/>
+       <xs:element name="Fecha" type="xs:date"/>
+       <xs:element name="Nombre" type="xs:string"/>
+    </xs:sequence>
+</xs:complexType>
 
 </xs:schema>', LOCAL=>true, GENTYPES=>false, GENBEAN=>false,
 GENTABLES=>false,
@@ -1993,19 +2152,15 @@ commit;
 end;
 /
 
-
 CREATE TABLE taller_tab (Id NUMBER, taller XMLTYPE)
   XMLTYPE COLUMN taller STORE AS BINARY XML
-  XMLSCHEMA "taller.xsd" ELEMENT "taller";
+  XMLSCHEMA "Taller.xsd" ELEMENT "taller"
 /
-
-
-
 insert into TALLER_TAB values (1,'<?xml version="1.0" encoding="UTF-8"?> 
 <taller>
     <Id_taller>1</Id_taller>
     <Nombre>Talleres Antonio</Nombre>
-    <direccion>Calle Sanchez 23</direccion>
+    <Direccion>Calle Sanchez 23</Direccion>
     <CodigoPostal>8</CodigoPostal>
     
     <admin>
@@ -2014,94 +2169,260 @@ insert into TALLER_TAB values (1,'<?xml version="1.0" encoding="UTF-8"?>
         <DNI>4936672P</DNI>
         <ExperienciaLaboral>1</ExperienciaLaboral>
     </admin>
+    
+    <st>
+        <estado_taller>Libre</estado_taller>
+    </st>
+    
+    <ab>
+        <Nombre>Ramon</Nombre>
+        <Apellidos>Sanchez Rodriguez</Apellidos>
+        <DNI>7136622P</DNI>
+        <NumeroSS>32165198165198</NumeroSS>
+        <ExperienciaLaboral>6</ExperienciaLaboral>
+        
+        <case>
+            <ID>1</ID>
+            <Fecha>2021-03-19</Fecha>
+            <Nombre>TalleresAntonioContraNavarro</Nombre>
+            
+        </case>
+    </ab>
 </taller>');
 /
-
 
 insert into TALLER_TAB values (2,'<?xml version="1.0" encoding="UTF-8"?> 
 <taller>
-    <Id_taller>2</Id_taller>
-    <Nombre>ReparaCar</Nombre>
-    <direccion>Calle Benito 2</direccion>
-    <CodigoPostal>36</CodigoPostal>
-    
-    <admin>
-        <Nombre>Julian</Nombre>
-        <Apellidos>Carro Sanchez</Apellidos>
-        <DNI>4139677P</DNI>
-        <ExperienciaLaboral>12</ExperienciaLaboral>
-    </admin>
+  <Id_taller>2</Id_taller>
+  <Nombre>ReparaCar</Nombre>
+  <Direccion>Calle Benito 2</Direccion>
+  <CodigoPostal>36</CodigoPostal>
+  <admin>
+    <Nombre>Julian</Nombre>
+    <Apellidos>Carro Sanchez</Apellidos>
+    <DNI>4139677P</DNI>
+    <ExperienciaLaboral>12</ExperienciaLaboral>
+  </admin>
+  <st>
+    <estado_taller>Ocupado</estado_taller>
+  </st>
+  <ab>
+    <Nombre>Julio</Nombre>
+    <Apellidos>Rodriguez Alvarez</Apellidos>
+    <DNI>7030329Z</DNI>
+    <NumeroSS>14160998169133</NumeroSS>
+    <ExperienciaLaboral>8</ExperienciaLaboral>
+    <case>
+      <ID>34</ID>
+      <Fecha>2021-08-20</Fecha>
+      <Nombre>ReparaCar34</Nombre>
+    </case>
+    <case>
+      <ID>35</ID>
+      <Fecha>2021-09-30</Fecha>
+      <Nombre>ReparaCar35</Nombre>
+    </case>
+  </ab>
 </taller>');
 /
 
+
 insert into TALLER_TAB values (3,'<?xml version="1.0" encoding="UTF-8"?> 
 <taller>
-    <Id_taller>3</Id_taller>
-    <Nombre>ReparaCar</Nombre>
-    <direccion>Calle Benito 36</direccion>
-    <CodigoPostal>156</CodigoPostal>
-    
-    <admin>
-        <Nombre>Pepe</Nombre>
-        <Apellidos>Carro Sanchez</Apellidos>
-        <DNI>4938676J</DNI>
-        <ExperienciaLaboral>18</ExperienciaLaboral>
-    </admin>
+  <Id_taller>3</Id_taller>
+  <Nombre>ReparaCar</Nombre>
+  <Direccion>Calle Benito 36</Direccion>
+  <CodigoPostal>156</CodigoPostal>
+  <admin>
+    <Nombre>Pepe</Nombre>
+    <Apellidos>Carro Sanchez</Apellidos>
+    <DNI>4938676J</DNI>
+    <ExperienciaLaboral>18</ExperienciaLaboral>
+  </admin>
+  <st>
+    <estado_taller>Libre</estado_taller>
+  </st>
+  <ab>
+    <Nombre>Ramon</Nombre>
+    <Apellidos>Ramirez Cifuentes</Apellidos>
+    <DNI>3610900B</DNI>
+    <NumeroSS>83161988769073</NumeroSS>
+    <ExperienciaLaboral>32</ExperienciaLaboral>
+    <case>
+      <ID>80</ID>
+      <Fecha>2019-07-28</Fecha>
+      <Nombre>ReparaCar80</Nombre>
+    </case>
+  </ab>
 </taller>');
 /
 
 insert into TALLER_TAB values (4,'<?xml version="1.0" encoding="UTF-8"?> 
 <taller>
-	<Id_taller>4</Id_taller>
-	<Nombre>Talleres Joaquin</Nombre>
-        <direccion>Avenida España 19</direccion>
-        <CodigoPostal>346</CodigoPostal>
-        
-        <admin>
-            <Nombre>Joaquin</Nombre>
-            <Apellidos>Gamez Moro</Apellidos>
-            <DNI>7931677Z</DNI>
-            <ExperienciaLaboral>15</ExperienciaLaboral>
-        </admin>
+  <Id_taller>4</Id_taller>
+  <Nombre>Talleres Joaquin</Nombre>
+  <Direccion>Avenida España 19</Direccion>
+  <CodigoPostal>346</CodigoPostal>
+  <admin>
+    <Nombre>Joaquin</Nombre>
+    <Apellidos>Gamez Moro</Apellidos>
+    <DNI>7931677Z</DNI>
+    <ExperienciaLaboral>15</ExperienciaLaboral>
+  </admin>
+  <st>
+    <estado_taller>Cerrado</estado_taller>
+  </st>
+  <ab>
+    <Nombre>Cristian</Nombre>
+    <Apellidos>Lopez Cifuentes</Apellidos>
+    <DNI>1696996P</DNI>
+    <NumeroSS>93160923366090</NumeroSS>
+    <ExperienciaLaboral>19</ExperienciaLaboral>
+    <case>
+      <ID>33</ID>
+      <Fecha>2001-08-30</Fecha>
+      <Nombre>TalleresJoaquinContraAnastasia</Nombre>
+    </case>
+  </ab>
 </taller>');
 /
 insert into TALLER_TAB values (5,'<?xml version="1.0" encoding="UTF-8"?> 
 <taller>
-        <Id_taller>5</Id_taller>
-        <Nombre>ReparaCar</Nombre>
-        <direccion>Avenida España 37</direccion>
-        <CodigoPostal>1862</CodigoPostal>
-        
-        <admin>
-            <Nombre>Benito</Nombre>
-            <Apellidos>Perez Navarro</Apellidos>
-            <DNI>0811673J</DNI>
-            <ExperienciaLaboral>18</ExperienciaLaboral>
-        </admin>
+  <Id_taller>5</Id_taller>
+  <Nombre>ReparaCar</Nombre>
+  <Direccion>Avenida España 37</Direccion>
+  <CodigoPostal>1862</CodigoPostal>
+  <admin>
+    <Nombre>Benito</Nombre>
+    <Apellidos>Perez Navarro</Apellidos>
+    <DNI>0811673J</DNI>
+    <ExperienciaLaboral>18</ExperienciaLaboral>
+  </admin>
+  <st>
+    <estado_taller>Libre</estado_taller>
+  </st>
+  <ab>
+    <Nombre>Eddieson</Nombre>
+    <Apellidos>Ledesma Sirac</Apellidos>
+    <DNI>3093790M</DNI>
+    <NumeroSS>69170903636801</NumeroSS>
+    <ExperienciaLaboral>39</ExperienciaLaboral>
+    <case>
+      <ID>156</ID>
+      <Fecha>2003-03-13</Fecha>
+      <Nombre>ReparaCar156</Nombre>
+    </case>
+    <case>
+      <ID>190</ID>
+      <Fecha>2004-09-02</Fecha>
+      <Nombre>ReparaCar190</Nombre>
+    </case>
+    <case>
+      <ID>300</ID>
+      <Fecha>2008-01-02</Fecha>
+      <Nombre>ReparaCar300</Nombre>
+    </case>
+     <case>
+      <ID>308</ID>
+      <Fecha>2008-12-24</Fecha>
+      <Nombre>ReparaCar308</Nombre>
+    </case>
+  </ab>
 </taller>');
 /
 
 insert into TALLER_TAB values (6,'<?xml version="1.0" encoding="UTF-8"?> 
 <taller>
-        <Id_taller>6</Id_taller>
-        <Nombre>Taller Ramon</Nombre>
-        <direccion>Avenida de la Alegria 48</direccion>
-        <CodigoPostal>2369</CodigoPostal>
+    <Id_taller>6</Id_taller>
+    <Nombre>Taller Ramon</Nombre>
+    <Direccion>Avenida de la Alegria 48</Direccion>
+    <CodigoPostal>2369</CodigoPostal>
+    
+    <admin>
+        <Nombre>Ramon</Nombre>
+        <Apellidos>Piernas Sarrion</Apellidos>
+        <DNI>9761671J</DNI>
+        <ExperienciaLaboral>1</ExperienciaLaboral>
+    </admin>
+    
+    <st>
+        <estado_taller>Ocupado</estado_taller>
+    </st>
+    
+    <ab>
+        <Nombre>Cristian</Nombre>
+        <Apellidos>Sarrion Ramos</Apellidos>
+        <DNI>8903711L</DNI>
+        <NumeroSS>29396913536481</NumeroSS>
+        <ExperienciaLaboral>45</ExperienciaLaboral>
         
-        <admin>
-            <Nombre>Ramon</Nombre>
-            <Apellidos>Piernas Sarrion</Apellidos>
-            <DNI>9761671J</DNI>
-            <ExperienciaLaboral>1</ExperienciaLaboral>
-        </admin>
+        <case>
+            <ID>99</ID>
+            <Fecha>2008-04-16</Fecha>
+            <Nombre>TalleresRamonContraLaDespensa</Nombre>
+            
+        </case>
+    </ab>
 </taller>');
 /
 
---consultas Carlos
-
-create or replace view TalleresReparacar as
-select ID, t.taller.extract('/Taller/taller/admin/Nombre/text()').getStringVal()
+--Obtener Nombre, apellidos y nombre del caso de los abogados que llevan Reparacar y no esten cerrados
+create or replace view Casos_Talleres_ReparacarNoCerrados as
+select Id, t.taller.extract('/taller/ab/Nombre/text()').getStringVal()  "Nombre Administrador",t.taller.extract('/taller/ab/Apellidos/text()').getStringVal() "Apellidos", t.taller.extract('/taller/ab/case/Nombre/text()').getStringVal() "Nombre Caso"
 from taller_tab t
-where t.taller.extract('/Taller/taller/Nombre/text()').getStringVal() = 'ReparaCar'
-;
+where t.taller.extract('/taller/Nombre/text()').getStringVal() = 'ReparaCar' and t.taller.extract('/taller/st/estado_taller/text()').getStringVal() != 'Cerrado'  ;
 /
+
+--Obtener los talleres que estan ocupados(SE DEBERIA DE PODER QUITAR EL XMLTYPE DE ESTA OCUPADO)
+create or replace view TalleresOcupados as
+select id as id, t.taller.extract('/taller/Nombre/text()').getStringVal() "Nombre Taller", 
+XMLQUERY(
+'for $i in /taller/st
+return
+<estado>
+{
+if ($i/estado_taller="Ocupado")
+then "true"
+else "false"
+}
+</estado>
+'PASSING taller RETURNING CONTENT) "Esta Ocupado"
+from taller_tab t;
+/
+
+--Obtener el numero de casos que tiene ReparaCar
+create or replace view CasosReparaCar2008 as
+SELECT COUNT 
+(CASE WHEN 
+t.taller.extract('/taller/ab/case/ID/text()').getStringVal() > 0 
+and 
+t.taller.extract('/taller/ab/case/Fecha/text()').getStringVal() > '2008-01-01'  
+THEN 1 
+ELSE NULL 
+END ) "Casos de 2008 ReparaCar"
+FROM TALLER_TAB t
+WHERE t.taller.extract('/taller/Nombre/text()').getStringVal() = 'ReparaCar';
+/
+
+
+--Un Update 
+UPDATE TALLER_TAB
+SET taller= INSERTCHILDXML(taller , '/taller' , 'ab' , xmltype('
+    <ab>
+        <Nombre>Jesus</Nombre>
+        <Apellidos>Sanchez Cebrian</Apellidos>
+        <DNI>0103669U</DNI>
+        <NumeroSS>69096911596387</NumeroSS>
+        <ExperienciaLaboral>15</ExperienciaLaboral>
+        
+        <case>
+            <ID>208</ID>
+            <Fecha>2021-04-16</Fecha>
+            <Nombre>TalleresRamonContraLaDespensa</Nombre>
+            
+        </case>
+    </ab>
+'))
+Where id = 2;
+/
+
