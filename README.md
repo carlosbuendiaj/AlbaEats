@@ -8,7 +8,7 @@ Creado conjuntamente por:
     
   [/albertonov](https://github.com/albertonov)
   
-  [/alfonm8](https://github.com/alfonm8)
+  [/alfonsoMP35](https://github.com/alfonsoMP35)
   
   [/carlosbuendiaj](https://github.com/carlosbuendiaj)
 
